@@ -143,13 +143,15 @@ def Send_Quadruped_Body(sim, x=0,y=0,z=0.3,body_length=0.5,body_height=0.1,objID
 	
 	#Send a position sensor attached to the body
 	sim.Send_Position_Sensor(ID=sensorID,objectIndex=bodyID)
+	print sensorID
 	sensorID +=1
 
 	return objID, jointID, sensorID
 
 
 if __name__ == '__main__':
-	sim = PYROSIM(playPaused = True,playBlind=False, evalTime = 1000)
+	T = 1000
+	sim = PYROSIM(playPaused = False,playBlind=False, evalTime = T)
 	objID = 0
 	jointID = 0
 	sensorID = 0
@@ -163,6 +165,11 @@ if __name__ == '__main__':
 
 	sim.Start()
 	sim.Wait_To_Finish()
+	print pos_sensor_list
+	for i in range(N):
+		for j in range(3):
+			print sim.Get_Sensor_Data(pos_sensor_list[i],j,T-1)
+		print '--------'
 	#sim.Get_Sensor_Data(pos_sensor_list[0],0,0)
 	#print Create_Layered_Network(back_connections=1,hidden_recurrence=0,motor_recurrence=0)
 # sim.Collect_Sensor_Data()

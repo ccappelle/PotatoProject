@@ -9,8 +9,11 @@ class PYROSIM:
 
 	def __init__(self,playBlind=False,playPaused=False,evalTime=constants.evaluationTime):
 
-		self.numJoints = 0
+                if playBlind: #Protect against hidden simumlators
+                        playPaused = False
 
+		self.numJoints = 0
+                self.evaluationTime = evalTime
 		self.numSensors = 0
 
 		commandsToSend = ['./simulator']
@@ -31,9 +34,9 @@ class PYROSIM:
 
                 self.Send('EvaluationTime '+str(evalTime)+'\n')
 
-        def Get_Sensor_Data(self,ID,s,t):
+        def Get_Sensor_Data(self,ID,sensor_offset,time):
 
-                return self.dataFromPython[ID,s,t]
+                return self.dataFromPython[ID,sensor_offset,time]
 
 	def Send_Bias_Neuron(self, ID = 0 ):
 
@@ -298,7 +301,7 @@ class PYROSIM:
 
 			index = index + 1
 
-			for t in range(0,constants.evaluationTime):
+			for t in range(0,self.evaluationTime):
 
                         	for s in range(0,numSensorValues):
 
