@@ -2,7 +2,7 @@ import numpy as np
 
 class LayeredNetwork():
 
-	def __init__(self,num_sensors=4,num_layers=1, num_hidden=8, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
+	def __init__(self,num_sensors=2,num_layers=1, num_hidden=8, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
 		#Create an layered network with random weights returned as adjacency matrix
 		#Dimensions and structure: num_sensors -> num_hidden_{1} -> ... -> num_hidden_{num_layers} -> num_motors
 		#can add feed back connections between hidden neurons (back_connections=1)
@@ -82,7 +82,7 @@ class LayeredNetwork():
 		synapse_Indices = np.nonzero(self.adj_matrix)
 		rands = np.random.permutation(self.total_synapses)
 
-		for i in range(self.total_synapses):
+		for i in range(int(n)):
 			fromID, toID = synapse_Indices[0][rands[i]], synapse_Indices[1][rands[i]]
 			self.Mutate_One_Synapse(fromID,toID,sigma)
 
