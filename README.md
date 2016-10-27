@@ -18,3 +18,6 @@ Step 2: Test the package by running
 $ python2.7 empty.py
 ```
 This should bring up an OpenGL window into a desolate virtual world for about 3 seconds. Do not avert your eyes!
+
+Step 3: Eat some potatoes
+[Eat Me!](./IMG_20161026_104053)
