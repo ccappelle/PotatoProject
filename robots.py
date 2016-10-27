@@ -1,15 +1,15 @@
 import networks
+import subprocess
 from pyrosim import PYROSIM
+import copy
 import math
+
 
 CREATE_NETWORK = -2
 NO_NETWORK = -1
 
 class Quadruped(object):
-	
-
-
-	def __init__(self,x=0,y=0,z=0.3,body_length=0.5,body_height=0.1,objID=0,jointID=0,sensorID=0,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
+	def __init__(self,x=0,y=0,z=0.3,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
 		self.pos = self.x,self.y,self.z = x,y,z
 		self.body_length = body_length
 		self.body_height = body_height
@@ -126,7 +126,7 @@ class Quadruped(object):
 		else:
 			return last_objID,last_jointID,last_sensorID
 
-	def Mutate_Network(var,sigma=-1):
+	def Mutate_Network(self,var=-1,sigma=-1):
 		if var<1 and var>0:
 			self.network.Mutate_p(p=var,sigma=sigma)
 		elif var>=1:
@@ -134,43 +134,64 @@ class Quadruped(object):
 		else:
 			self.network.Mutate_p(sigma=sigma)
 
+
+	def Copy_And_Mutate(self,var=-1,sigma=-1):
+		mutant = copy.deepcopy(self)
+		mutant.Mutate_Network(var=var,sigma=sigma)
+		return mutant
+
+	def Get_Adj_Matrix(self):
+		return self.network.Get_Adj_Matrix()
+
 	@staticmethod
-	def Create_Indv():
-		robot = Quadruped()
+	def Create_Indv(color=[1.,1.,1.]):
+		robot = Quadruped(color=color)
 		robot.Add_Random_Network()
 		return robot
 
 
 if __name__ == "__main__":
-	import numpy as np
-	T = 200
-	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
+	pass
+	#Test Mutation Operators --------------------
+	# x = Quadruped.Create_Indv()
+	# print '**************************'
+	# print x.Get_Adj_Matrix()
+	# print '---------------------'
+	# y = x.Copy_And_Mutate()
+	# print y.Get_Adj_Matrix()
+	# print '++++++++++++++++++++++++++++'
+	# print x.Get_Adj_Matrix()
+	# import numpy as np
 
-	objID = 0
-	jointID = 0
-	sensorID = 0
-	neuronID = 0
-	pos_sensor_list = []
-	N = 1
-	for i in range(N): #Create N potatoes, each with a different random flavor
-		color = np.random.rand(3)
-		#myQuad = Quadruped(x=i*1.5-N/2,color=color)
-		myQuad = Quadruped.Create_Indv()
-		objID,jointID,sensorID,neuronID = myQuad.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-		pos_sensor_list.append(sensorID-1)
+	#Test Simulation of multiple robots
+	# T = 200
+	# sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 
-	sim.Start()
-	sim.Wait_To_Finish()
-	gaitData={}
-	posData = np.zeros((3,T))
-	for i in range(4):
-		gaitData[i] = [0]*T
-		for t in range(T):
-			gaitData[i][t] = int(sim.dataFromPython[i,0,t])
+	# objID = 0
+	# jointID = 0
+	# sensorID = 0
+	# neuronID = 0
+	# pos_sensor_list = []
+	# N = 5
+	# for i in range(N): #Create N potatoes, each with a different random flavor
+	# 	color = np.random.rand(3)
+	# 	myQuad = Quadruped(x=i*1.5-N/2,color=color)
+	# 	#myQuad = Quadruped.Create_Indv(x=i*(1.5)-1.0, color =np.random.rand(3))
+	# 	objID,jointID,sensorID,neuronID = myQuad.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
+	# 	pos_sensor_list.append(sensorID-1)
 
-	for t in range(T):
-		for i in range(3):
-			posData[i,t] = sim.dataFromPython[4,i,t]
-		print posData[:,t]
+	# sim.Start()
+	# sim.Wait_To_Finish()
+	# gaitData={}
+	# posData = np.zeros((3,T))
+	# for i in range(4):
+	# 	gaitData[i] = [0]*T
+	# 	for t in range(T):
+	# 		gaitData[i][t] = int(sim.dataFromPython[i,0,t])
+
+	# for t in range(T):
+	# 	for i in range(3):
+	# 		posData[i,t] = sim.dataFromPython[4,i,t]
+	# 	print posData[:,t]
 
 

@@ -54,7 +54,7 @@ class LayeredNetwork():
 
 		self.total_synapses = np.count_nonzero(self.adj_matrix)
 
-	def Get_Adj_Matrix():
+	def Get_Adj_Matrix(self):
 		return self.adj_matrix
 
 	def Mutate_One_Synapse(self,fromID,toID,sigma=-1):
@@ -103,3 +103,7 @@ def Create_Biped_Network(num_layers=1,num_hidden=8,back_connections=0,hidden_rec
 if __name__ == "__main__":
 	myNet = Create_Quad_Network()
 	myNet.Mutate_p()
+	
+
+
+	
