@@ -5,8 +5,7 @@ import copy
 import math
 
 
-CREATE_NETWORK = -2
-NO_NETWORK = -1
+CREATE_NETWORK = -1
 
 class Quadruped(object):
 	def __init__(self,x=0,y=0,z=0.3,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
@@ -14,13 +13,12 @@ class Quadruped(object):
 		self.body_length = body_length
 		self.body_height = body_height
 		self.color = self.r,self.g,self.b = color
-		self.network = network
-		if self.network == CREATE_NETWORK:
-			self.Add_Random_Network()
-
 		self.z_incr = z_incr
 		self.leg_length = self.z
 		self.radius = .5*self.body_height
+		self.network = network
+		if self.network == CREATE_NETWORK:
+			self.Add_Random_Network()
 
 
 	def Add_Network(self,network):
@@ -48,10 +46,11 @@ class Quadruped(object):
 		#Auto asign legs based on how high the body is set to be
 
 		delta = 0.
-		for i in range(4):
+		num_legs = 4
+		for i in range(num_legs):
 			leg_x = math.cos(delta)
 			leg_y = math.sin(delta)
-			delta += math.pi/2.0
+			delta += math.pi/((num_legs)/2.0)
 			bl_length1 = (self.body_length+self.leg_length)/2.
 			bl_length2 = self.body_length/2.+self.leg_length
 
@@ -96,9 +95,6 @@ class Quadruped(object):
 		##### SEND NETWORK ###############################
 		if send_network:
 
-			if self.network == NO_NETWORK:
-				self.Add_Random_Network()
-
 			#Sends a neural net to the simulator
 			sensor_neuron_start = neuronID
 			for sensor_index in range(self.network.num_sensors): #Send sensor neurons to sim
@@ -142,12 +138,6 @@ class Quadruped(object):
 
 	def Get_Adj_Matrix(self):
 		return self.network.Get_Adj_Matrix()
-
-	@staticmethod
-	def Create_Indv(color=[1.,1.,1.]):
-		robot = Quadruped(color=color)
-		robot.Add_Random_Network()
-		return robot
 
 
 if __name__ == "__main__":
