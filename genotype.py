@@ -1,21 +1,18 @@
 import numpy as np
 from copy import deepcopy
 
-from cppn import Network
-
-
-# TODO: make orig_size_xyz correspond to a mapping of the ANN weights (rather than voxel coordinates)
-# TODO: mutations of cppns
+from cppn import Network, CPPN
+from utils import positive_sigmoid
 
 
 class Genotype(object):
     """A container for multiple networks, 'genetic code' copied with modification to produce offspring."""
 
-    def __init__(self, orig_size_xyz=(6, 6, 6)):
+    def __init__(self, matrix_size_xy=(28, 28)):
         self.networks = []
         self.all_networks_outputs = []
-        self.to_phenotype_mapping = None
-        self.orig_size_xyz = orig_size_xyz
+        self.to_phenotype_mapping = dict()
+        self.matrix_size_xy = matrix_size_xy
 
     def __iter__(self):
         """Iterate over the networks. Use the expression 'for n in network'."""
@@ -49,10 +46,10 @@ class Genotype(object):
             for name in network.graph.nodes():
                 network.graph.node[name]["evaluated"] = False  # flag all nodes as unevaluated
 
-            network.set_input_node_states(self.orig_size_xyz)  # reset the inputs
+            network.set_input_node_states(self.matrix_size_xy)  # reset the inputs
 
             for name in network.output_node_names:
-                network.graph.node[name]["state"] = np.zeros(self.orig_size_xyz)  # clear old outputs
+                network.graph.node[name]["state"] = np.zeros(self.matrix_size_xy)  # clear old outputs
                 network.graph.node[name]["state"] = self.calc_node_state(network, name)  # calculate new outputs
 
     def calc_node_state(self, network, node_name):
@@ -62,7 +59,7 @@ class Genotype(object):
 
         network.graph.node[node_name]["evaluated"] = True
         input_edges = network.graph.in_edges(nbunch=[node_name])
-        new_state = np.zeros(self.orig_size_xyz)
+        new_state = np.zeros(self.matrix_size_xy)
 
         for edge in input_edges:
             node1, node2 = edge
@@ -74,3 +71,14 @@ class Genotype(object):
             return self.to_phenotype_mapping[node_name]["func"](new_state)
 
         return network.graph.node[node_name]["function"](new_state)
+
+
+my_genotype = Genotype(matrix_size_xy=(5, 5))
+my_genotype.add_network(CPPN(output_node_names=["growth_thing"]))
+my_genotype.to_phenotype_mapping["growth_thing"] = {"func": positive_sigmoid}
+my_genotype.express()
+print my_genotype[0].graph.node["growth_thing"]
+
+my_genotype[0].mutate()
+my_genotype.express()
+print my_genotype[0].graph.node["growth_thing"]

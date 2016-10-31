@@ -8,9 +8,6 @@ from collections import OrderedDict
 from utils import neg_abs, neg_square, sqrt_abs, neg_sqrt_abs, normalize, sigmoid
 
 
-# TODO: change input node names to correspond to weight coordinates in ANN
-
-
 class OrderedGraph(DiGraph):
     """Create a graph object that tracks the order nodes and their neighbors are added."""
     node_dict_factory = OrderedDict
@@ -43,7 +40,7 @@ class Network(object):
 class CPPN(Network):
     """A Compositional Pattern Producing Network"""
 
-    input_node_names = ['x', 'y', 'z', 'd', 'b']
+    input_node_names = ['x', 'y', 'b']
     activation_functions = [np.sin, np.abs, neg_abs, np.square, neg_square, sqrt_abs, neg_sqrt_abs]
 
     def __init__(self, output_node_names):
@@ -68,18 +65,13 @@ class CPPN(Network):
     def set_input_node_states(self, orig_size_xyz):
         input_x = np.zeros(orig_size_xyz)
         input_y = np.zeros(orig_size_xyz)
-        input_z = np.zeros(orig_size_xyz)
         for x in range(orig_size_xyz[0]):
             for y in range(orig_size_xyz[1]):
-                for z in range(orig_size_xyz[2]):
-                    input_x[x, y, z] = x
-                    input_y[x, y, z] = y
-                    input_z[x, y, z] = z
+                input_x[x, y] = x
+                input_y[x, y] = y
 
         input_x = normalize(input_x)
         input_y = normalize(input_y)
-        input_z = normalize(input_z)
-        input_d = normalize(np.power(np.power(input_x, 2) + np.power(input_y, 2) + np.power(input_z, 2), 0.5))
         input_b = np.ones(orig_size_xyz)
 
         for name in self.graph.nodes():
@@ -89,22 +81,12 @@ class CPPN(Network):
             if name == "y":
                 self.graph.node[name]["state"] = input_y
                 self.graph.node[name]["evaluated"] = True
-            if name == "z":
-                self.graph.node[name]["state"] = input_z
-                self.graph.node[name]["evaluated"] = True
-            if name == "d":
-                self.graph.node[name]["state"] = input_d
-                self.graph.node[name]["evaluated"] = True
             if name == "b":
                 self.graph.node[name]["state"] = input_b
                 self.graph.node[name]["evaluated"] = True
 
     def mutate(self, num_random_node_adds=5, num_random_node_removals=0, num_random_link_adds=10,
                num_random_link_removals=5, num_random_activation_functions=100, num_random_weight_changes=100):
-
-        # TODO: set default arg val via brute force search
-        # TODO: weight std is defaulted to 0.5, to change this we can't just put it in args of mutate() b/c getargspec
-        # is used in create_new_children_through_mutation() to automatically pick the mutation type.
 
         variation_degree = None
         variation_type = None
