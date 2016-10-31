@@ -1,4 +1,6 @@
 import numpy as np
+import random
+import inspect
 from copy import deepcopy
 
 from cppn import Network, CPPN
@@ -73,12 +75,69 @@ class Genotype(object):
         return network.graph.node[node_name]["function"](new_state)
 
 
-my_genotype = Genotype(matrix_size_xy=(5, 5))
-my_genotype.add_network(CPPN(output_node_names=["growth_thing"]))
-my_genotype.to_phenotype_mapping["growth_thing"] = {"func": positive_sigmoid}
-my_genotype.express()
-print my_genotype[0].graph.node["growth_thing"]
+parent = Genotype(matrix_size_xy=(5, 5))
+parent.add_network(CPPN(output_node_names=["growth_thing"]))
+parent.to_phenotype_mapping["growth_thing"] = {"func": positive_sigmoid}
+parent.express()
+print parent[0].graph.node["growth_thing"]["state"]
 
-my_genotype[0].mutate()
-my_genotype.express()
-print my_genotype[0].graph.node["growth_thing"]
+
+# below is code to mutate a single individual:
+
+# first some parameters for mutation
+max_mutation_attempts = 1500
+allow_neutral_mutations = False
+
+child = deepcopy(parent)
+selection = np.random.random(len(child)) < 1 / float(len(child))  # uniformly select networks
+selected_networks = np.arange(len(child))[selection].tolist()
+if len(selected_networks) == 0:
+    selected_networks = [random.choice(range(len(child)))]  # make sure we at least mutate one network
+
+
+for network in child:
+    for node_name in network.graph:
+        network.graph.node[node_name]["old_state"] = network.graph.node[node_name]["state"]
+
+old_child = deepcopy(child)
+
+for selected_net_idx in selected_networks:
+    mutation_counter = 0
+    done = False
+    while not done:
+
+        if mutation_counter > max_mutation_attempts:
+            break
+
+        mutation_counter += 1
+        child = deepcopy(old_child)
+
+        mut_func_args = inspect.getargspec(child[selected_net_idx].mutate)
+        mut_func_args = [0 for _ in range(1, len(mut_func_args.args))]
+        choice = random.choice(range(len(mut_func_args)))
+        mut_func_args[choice] = 1
+
+        child[selected_net_idx].mutate(*mut_func_args)  # mutation
+
+        child.express()
+
+        if allow_neutral_mutations:
+            break
+        else:
+            for output_node in child[selected_net_idx].output_node_names:
+                new = child[selected_net_idx].graph.node[output_node]["state"]
+                old = child[selected_net_idx].graph.node[output_node]["old_state"]
+                changes = np.array(new != old, dtype=np.bool)
+                if np.any(changes):
+                    done = True
+                    break
+
+    if mutation_counter > max_mutation_attempts:
+        print "Couldn't find a successful mutation in {} attempts! Skipping this network.".format(max_mutation_attempts)
+        continue
+
+    for output_node in child[selected_net_idx].output_node_names:
+        child[selected_net_idx].graph.node[output_node]["old_state"] = ""
+
+
+print child[0].graph.node["growth_thing"]["state"]
