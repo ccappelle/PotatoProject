@@ -7,8 +7,8 @@ import math
 
 CREATE_NETWORK = -1
 
-class Quadruped(object):
-	def __init__(self,x=0,y=0,z=0.3,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
+class NPed(object):
+	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
 		self.pos = self.x,self.y,self.z = x,y,z
 		self.body_length = body_length
 		self.body_height = body_height
@@ -17,6 +17,7 @@ class Quadruped(object):
 		self.leg_length = self.z
 		self.radius = .5*self.body_height
 		self.network = network
+		self.num_legs = num_legs
 		if self.network == CREATE_NETWORK:
 			self.Add_Random_Network()
 
@@ -25,7 +26,7 @@ class Quadruped(object):
 		self.network = network
 
 	def Add_Random_Network(self):
-		self.network = networks.Create_Quad_Network()
+		self.network = networks.LayeredNetwork(num_sensors=self.num_legs,num_hidden=self.num_legs*2,num_motors=self.num_legs*2)
 
 	def Send_To_Simulator(self,sim, objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		
@@ -46,7 +47,7 @@ class Quadruped(object):
 		#Auto asign legs based on how high the body is set to be
 
 		delta = 0.
-		num_legs = 4
+		num_legs = self.num_legs
 		for i in range(num_legs):
 			leg_x = math.cos(delta)
 			leg_y = math.sin(delta)
@@ -138,6 +139,9 @@ class Quadruped(object):
 
 	def Get_Adj_Matrix(self):
 		return self.network.Get_Adj_Matrix()
+class Quadruped(NPed):
+	def __init__(self,*args,**kwargs):
+		super(Quadruped,self).__init__(num_legs=4,*args,**kwargs)
 
 
 if __name__ == "__main__":
@@ -155,7 +159,7 @@ if __name__ == "__main__":
 	
 
 	#Test Simulation of multiple robots
-	T = 200
+	T = 1000
 	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 
 	objID = 0
@@ -163,12 +167,11 @@ if __name__ == "__main__":
 	sensorID = 0
 	neuronID = 0
 	pos_sensor_list = []
-	N = 5
+	N = 10
 	for i in range(N): #Create N potatoes, each with a different random flavor
 		color = np.random.rand(3)
-		myQuad = Quadruped(x=i*1.5-N/2,color=color)
-		#myQuad = Quadruped.Create_Indv(x=i*(1.5)-1.0, color =np.random.rand(3))
-		objID,jointID,sensorID,neuronID = myQuad.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
+		pedBot = NPed(x=i*1.5-N/2,num_legs=i,color=color)
+		objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
 		pos_sensor_list.append(sensorID-1)
 
 	sim.Start()
