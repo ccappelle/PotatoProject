@@ -71,13 +71,13 @@ class Quadruped(object):
 			#Hip joint
 			sim.Send_Joint(ID=jointID, firstObjectID=bodyID, secondObjectID=thighID, 
 							x=leg_x*self.body_length/2.+self.x,y=leg_y*self.body_length/2.+self.y,z=self.z+self.z_incr,
-							n1=leg_y,n2=leg_x,n3=0)
+							n1=-leg_y,n2=leg_x,n3=0)
 			jointID+=1
 
 			#Knee Joint
 			sim.Send_Joint(ID=jointID, firstObjectID=thighID, secondObjectID=calfID, 
 							x=leg_x*bl_length2+self.x,y=leg_y*bl_length2+self.y,z=self.z+self.z_incr,
-							n1=leg_y,n2=leg_x,n3=0)
+							n1=-leg_y,n2=leg_x,n3=0)
 			jointID+=1
 
 			#Sensor on feet
@@ -142,6 +142,7 @@ class Quadruped(object):
 
 if __name__ == "__main__":
 	pass
+	import numpy as np
 	#Test Mutation Operators --------------------
 	# x = Quadruped.Create_Indv()
 	# print '**************************'
@@ -151,27 +152,30 @@ if __name__ == "__main__":
 	# print y.Get_Adj_Matrix()
 	# print '++++++++++++++++++++++++++++'
 	# print x.Get_Adj_Matrix()
-	# import numpy as np
+	
 
 	#Test Simulation of multiple robots
-	# T = 200
-	# sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
+	T = 200
+	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 
-	# objID = 0
-	# jointID = 0
-	# sensorID = 0
-	# neuronID = 0
-	# pos_sensor_list = []
-	# N = 5
-	# for i in range(N): #Create N potatoes, each with a different random flavor
-	# 	color = np.random.rand(3)
-	# 	myQuad = Quadruped(x=i*1.5-N/2,color=color)
-	# 	#myQuad = Quadruped.Create_Indv(x=i*(1.5)-1.0, color =np.random.rand(3))
-	# 	objID,jointID,sensorID,neuronID = myQuad.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-	# 	pos_sensor_list.append(sensorID-1)
+	objID = 0
+	jointID = 0
+	sensorID = 0
+	neuronID = 0
+	pos_sensor_list = []
+	N = 5
+	for i in range(N): #Create N potatoes, each with a different random flavor
+		color = np.random.rand(3)
+		myQuad = Quadruped(x=i*1.5-N/2,color=color)
+		#myQuad = Quadruped.Create_Indv(x=i*(1.5)-1.0, color =np.random.rand(3))
+		objID,jointID,sensorID,neuronID = myQuad.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
+		pos_sensor_list.append(sensorID-1)
 
-	# sim.Start()
-	# sim.Wait_To_Finish()
+	sim.Start()
+	sim.Wait_To_Finish()
+
+
+	
 	# gaitData={}
 	# posData = np.zeros((3,T))
 	# for i in range(4):
