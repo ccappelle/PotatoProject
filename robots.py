@@ -19,6 +19,7 @@ class Robot(object):
 		self.num_joints = 0
 		self.num_sensors = 0
 		self.num_neurons = 0
+		
 	def Send_To_Simulator(self,sim,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		num_objects = 0
 		num_sensors = 0
@@ -202,31 +203,31 @@ class Quadruped(NPed):
 if __name__ == "__main__":
 	pass
 	import numpy as np
-	sim = PYROSIM(playPaused=False,playBlind=False,evalTime = 500)
-	robo = Robot()
-	robo.genome.Add_Body_Part(BOX,{'ID':0,'x':4})
-	robo.Send_To_Simulator(sim)
+	# sim = PYROSIM(playPaused=False,playBlind=False,evalTime = 500)
+	# robo = Robot()
+	# robo.genome.Add_Body_Part(BOX,{'ID':0,'x':4})
+	# robo.Send_To_Simulator(sim)
 	
-	sim.Start()
+	# sim.Start()
 
 	#Test Simulation of multiple robots
-	# T = 1000
-	# sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
+	T = 1000
+	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 
-	# objID = 0
-	# jointID = 0
-	# sensorID = 0
-	# neuronID = 0
-	# pos_sensor_list = []
-	# N = 10
-	# for i in range(N): #Create N potatoes, each with a different random flavor
-	# 	color = np.random.rand(3)
-	# 	pedBot = NPed(x=i*1.5-N/2,num_legs=i,color=color)
-	# 	objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-	# 	pos_sensor_list.append(sensorID-1)
+	objID = 0
+	jointID = 0
+	sensorID = 0
+	neuronID = 0
+	pos_sensor_list = []
+	N = 10
+	for i in range(N): #Create N potatoes, each with a different random flavor
+		color = np.random.rand(3)
+		pedBot = NPed(x=i*1.5-N/2,num_legs=i,color=color)
+		objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
+		pos_sensor_list.append(sensorID-1)
 
-	# sim.Start()
-	# sim.Wait_To_Finish()
+	sim.Start()
+	sim.Wait_To_Finish()
 
 
 	
