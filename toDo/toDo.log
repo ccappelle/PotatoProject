@@ -1,4 +1,4 @@
-This is LuaTeX, Version beta-0.80.0 (TeX Live 2015) (rev 5238)  (format=lualatex 2015.5.24)  31 OCT 2016 15:16
+This is LuaTeX, Version beta-0.80.0 (TeX Live 2015) (rev 5238)  (format=lualatex 2015.5.24)  1 NOV 2016 08:55
  restricted \write18 enabled.
 **toDo.tex
 (./toDo.tex
@@ -1761,20 +1761,20 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 ] (./toDo.aux))
 
 Here is how much of LuaTeX's memory you used:
- 21995 strings out of 494693
+ 21998 strings out of 494693
  100000,552014 words of node,token memory allocated
  344 words of node memory still in use:
    6 hlist, 2 vlist, 2 rule, 2 glue, 1 kern, 46 glue_spec, 1 write nodes
-   avail lists: 1:1,2:25,3:90,4:590,5:51,6:410,7:9,9:127,10:31,11:1
- 24931 multiletter control sequences out of 65536+600000
+   avail lists: 1:1,2:25,3:99,4:647,5:53,6:440,7:9,9:135,10:34,11:1
+ 24934 multiletter control sequences out of 65536+600000
  39 fonts using 1544019 bytes
- 54i,11n,73p,1215b,317s stack positions out of 5000i,500n,10000p,200000b,100000s
+ 54i,11n,73p,1215b,330s stack positions out of 5000i,500n,10000p,200000b,100000s
 <</usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><
 </usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><</
 usr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb><</u
 sr/local/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
 <</usr/local/texlive/2015/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on toDo.pdf (1 page, 50894 bytes).
+Output written on toDo.pdf (1 page, 51004 bytes).
 
 PDF statistics: 31 PDF objects out of 1000 (max. 8388607)
  22 compressed objects within 1 object stream

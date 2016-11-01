@@ -10,6 +10,9 @@ class Genome(object):
 		self.brain_parts={}
 		self.body_index = 0
 		self.brain_index = 0
+		self.num_joints = 0
+		self.num_body_parts = 0
+		self.num_sensors = 0
 	def Add_Part(self,which,part_type,part_params={}):
 		if which==BODY:
 			self.body_parts[self.body_index] = {}

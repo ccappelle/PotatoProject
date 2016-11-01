@@ -15,9 +15,15 @@ SENSOR = 3
 class Robot(object):
 	def __init__(self,x=0,y=0,z=1.0):
 		self.genome=robogenome.Genome()
-
+		self.num_body_parts = 0
+		self.num_joints = 0
+		self.num_sensors = 0
+		self.num_neurons = 0
 	def Send_To_Simulator(self,sim,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-
+		num_objects = 0
+		num_sensors = 0
+		num_joints = 0
+		num_neurons = 0
 		for i in self.genome.body_parts:
 			part_type, part_params = self.genome.Get_Body_Part(i)
 			if 'ID' not in part_params:
@@ -31,25 +37,29 @@ class Robot(object):
 			if part_type==BOX:
 				part_params['ID'] += objID
 				sim.Send_Box(**part_params)
-				objID += 1
+				part_params['ID'] -= objID
+				num_objects += 1
 
 			elif part_type==CYLINDER:
 				part_params['ID'] += objID
 				sim.Send_Cylinder(**part_params)
-				objID += 1
+				part_params['ID'] -= objID
+				num_objects += 1
 
 			elif part_type==JOINT:
 				part_params['ID'] += jointID
 				sim.Send_Joint(**part_params)
-				jointID += 1
+				part_params['ID'] -= jointID
+				num_joints += 1
 
 			elif part_type==SENSOR:
 				part_params['ID'] += sensorID
 				sim.Send_Joint(**part_params)
-				sensorID += 1
+				part_params['ID'] -= sensorID
+				num_sensors += 1
 
 
-		return objID,jointID,sensorID,neuronID
+		return objID+num_objects,jointID+num_joints,sensorID+num_sensors,neuronID+num_neurons
 
 class NPed(object):
 	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
@@ -62,6 +72,7 @@ class NPed(object):
 		self.radius = .5*self.body_height
 		self.network = network
 		self.num_legs = num_legs
+
 		if self.network == CREATE_NETWORK:
 			self.Add_Random_Network()
 
