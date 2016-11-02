@@ -5,7 +5,6 @@ import constants
 
 from subprocess import Popen, PIPE
 
-
 class PYROSIM:
 
 	def __init__(self,playBlind=False,playPaused=False,evalTime=constants.evaluationTime):
@@ -133,7 +132,7 @@ class PYROSIM:
                 outputString = outputString + '\n'
 
                 self.Send(outputString)
-      
+
 	def Send_Light_Sensor(self, ID, objectIndex = 0 ):
 
                 outputString = 'LightSensor'
@@ -231,19 +230,25 @@ class PYROSIM:
                 self.Send(outputString)
 
         def Send_Synapse(self, sourceNeuronIndex = 0 , targetNeuronIndex = 0 , weight = 0.0 ):
-
-	        outputString = 'Synapse'
+	        self.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,start_weight=weight,end_weight=weight,start_time=0,end_time=0)
+	
+        def Send_Changing_Synapse(self, sourceNeuronIndex=0, targetNeuronIndex=0, start_weight=0.0,end_weight=0.0,start_time=0,end_time=0):
+                outputString = 'Synapse'
 
                 outputString = outputString + ' ' + str(sourceNeuronIndex)
 
                 outputString = outputString + ' ' + str(targetNeuronIndex)
 
-                outputString = outputString + ' ' + str(weight)
+                outputString = outputString + ' ' + str(start_weight)
 
+                outputString = outputString + ' ' + str(end_weight)
+
+                outputString = outputString + ' ' + str(start_time)
+
+                outputString = outputString + ' ' + str(end_time)
                 outputString = outputString + '\n'
 
-                self.Send(outputString)
-	
+                self.Send(outputString)           
         def Send_Touch_Sensor(self, ID, objectIndex):
 
                 outputString = 'TouchSensor'

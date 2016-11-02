@@ -169,7 +169,10 @@ class NPed(object):
 			for i in range(self.network.total_neurons):
 				for j in range(self.network.total_neurons):
 					if not(self.network.adj_matrix[i,j]==0): #Connect neurons with synapses from network adj matrix
-						sim.Send_Synapse( neuronID+i,neuronID+j,self.network.adj_matrix[i,j])
+						rand = 2.0*np.random.rand()-1.0
+						print rand
+						sim.Send_Changing_Synapse( sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,start_weight=0.0, 
+													end_weight=rand, start_time=sim.evaluationTime/2, end_time=sim.evaluationTime)
 
 			last_neuronID = neuronID + self.network.total_neurons
 
@@ -212,7 +215,7 @@ if __name__ == "__main__":
 	# sim.Start()
 
 	#Test Simulation of multiple robots
-	T = 1000
+	T = 500
 	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 
 	objID = 0

@@ -39,7 +39,7 @@ class Genome(object):
 
 
 	def Add_Cylinder(self, part_params={}):
-
+		pass
 	
 
 	def Print(self):

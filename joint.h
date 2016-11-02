@@ -42,8 +42,8 @@ public:
 	void Create_In_Simulator(dWorldID world, OBJECT *firstObject, OBJECT *secondObject);
 
 	void Create_In_Simulator(dWorldID world, OBJECT *firstObject);
-	
-        void Create_Proprioceptive_Sensor(int myID, int evalPeriod);
+
+    void Create_Proprioceptive_Sensor(int myID, int evalPeriod);
 
 	int  Get_First_Object_Index(void);
 

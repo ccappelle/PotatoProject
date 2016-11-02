@@ -132,7 +132,7 @@ void ENVIRONMENT::Update_Neural_Network(int t) {
 
 	if ( neuralNetwork )
 
-		neuralNetwork->Update();
+		neuralNetwork->Update(t);
 }
 
 void ENVIRONMENT::Write_Sensor_Data(int evalPeriod) {
@@ -202,12 +202,12 @@ void ENVIRONMENT::Create_Joint( dWorldID world, dSpaceID space, int index) {
 
 	OBJECT *firstObject = objects[ joints[index]->Get_First_Object_Index() ];
 
-        if (joints[index]->Get_Second_Object_Index() == -1){
-                joints[index]->Create_In_Simulator( world, firstObject);
+        if ( joints[index]->Get_Second_Object_Index() == -1){
+                joints[index]-> Create_In_Simulator( world, firstObject);
         }
         else{
                 OBJECT *secondObject = objects[ joints[index]->Get_Second_Object_Index() ];
-                joints[index]->Create_In_Simulator(     world, firstObject , secondObject );        
+                joints[index]->Create_In_Simulator(     world, firstObject , secondObject );
         }
 
 	numberOfJoints++;
@@ -403,6 +403,9 @@ void ENVIRONMENT::Update_Sensor_Neurons(int t) {
 
                 objects[i]->Update_Sensor_Neurons(t);
 
+        if ( neuralNetwork != NULL){
+                neuralNetwork -> Update_Weights(t);
+        }
         for (int j=0;j<numberOfJoints;j++)
 
                 joints[j]->Update_Sensor_Neurons(t);

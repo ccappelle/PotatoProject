@@ -72,11 +72,13 @@ void NEURAL_NETWORK::Add_Synapse(void) {
         synapses[numSynapses++] = new SYNAPSE(); 
 }
 
-void NEURAL_NETWORK::Update(void) {
+void NEURAL_NETWORK::Update(int t) {
 
 	Push_Current_Values_To_Previous_Values();
 
 	Reset_Neuron_Values();
+
+	Update_Weights(t);
 
 	Update_Neurons();
 
@@ -143,6 +145,12 @@ void NEURAL_NETWORK::Update_Neurons(void) {
 		neurons[tni]->Set( neurons[tni]->Get_Value() + influence );
 	}
 
+}
+
+void NEURAL_NETWORK::Update_Weights(int t){
+	for (int s = 0; s< numSynapses; s++){
+		synapses[s]-> Update_Weight(t);
+	}
 }
 
 #endif

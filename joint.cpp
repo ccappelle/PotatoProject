@@ -86,12 +86,8 @@ void JOINT::Create_In_Simulator(dWorldID world, OBJECT *firstObject, OBJECT *sec
 
 	joint = dJointCreateHinge(world,0);
 
-        if (secondObject == NULL){
-                dJointAttach( joint, firstObject->Get_Body() , 0);
-        }
-        else{
-	       dJointAttach( joint , firstObject->Get_Body() , secondObject->Get_Body() );
-        }
+	dJointAttach( joint , firstObject->Get_Body() , secondObject->Get_Body() );
+
 	dJointSetHingeAnchor(joint,x,y,z);
 
 	dJointSetHingeAxis(joint,normalX,normalY,normalZ);
@@ -101,20 +97,17 @@ void JOINT::Create_In_Simulator(dWorldID world, OBJECT *firstObject, OBJECT *sec
         dJointSetHingeParam(joint,dParamHiStop,highStop);
 }
 
-void JOINT::Create_In_Simulator(dWorldID world, OBJECT*firstObject){
-        joint = dJointCreateHinge(world,0);
+void JOINT::Create_In_Simulator(dWorldID world, OBJECT *firstObject){
+        joint = dJointCreateHinge(world, 0);
 
         dJointAttach( joint, firstObject->Get_Body(), 0);
-
-        dJointSetHingeAnchor(joint,x,y,z);
 
         dJointSetHingeAxis(joint,normalX,normalY,normalZ);
 
         dJointSetHingeParam(joint,dParamLoStop,lowStop);
 
-        dJointSetHingeParam(joint,dParamHiStop,highStop);
+        dJointSetHingeParam(joint,dParamHiStop,highStop);   
 }
-
 void JOINT::Create_Proprioceptive_Sensor(int myID, int evalPeriod) {
 
         proprioceptiveSensor = new PROPRIOCEPTIVE_SENSOR(myID,evalPeriod);
