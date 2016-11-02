@@ -86,13 +86,31 @@ void JOINT::Create_In_Simulator(dWorldID world, OBJECT *firstObject, OBJECT *sec
 
 	joint = dJointCreateHinge(world,0);
 
-	dJointAttach( joint , firstObject->Get_Body() , secondObject->Get_Body() );
-
+        if (secondObject == NULL){
+                dJointAttach( joint, firstObject->Get_Body() , 0);
+        }
+        else{
+	       dJointAttach( joint , firstObject->Get_Body() , secondObject->Get_Body() );
+        }
 	dJointSetHingeAnchor(joint,x,y,z);
 
 	dJointSetHingeAxis(joint,normalX,normalY,normalZ);
 
 	dJointSetHingeParam(joint,dParamLoStop,lowStop);
+
+        dJointSetHingeParam(joint,dParamHiStop,highStop);
+}
+
+void JOINT::Create_In_Simulator(dWorldID world, OBJECT*firstObject){
+        joint = dJointCreateHinge(world,0);
+
+        dJointAttach( joint, firstObject->Get_Body(), 0);
+
+        dJointSetHingeAnchor(joint,x,y,z);
+
+        dJointSetHingeAxis(joint,normalX,normalY,normalZ);
+
+        dJointSetHingeParam(joint,dParamLoStop,lowStop);
 
         dJointSetHingeParam(joint,dParamHiStop,highStop);
 }

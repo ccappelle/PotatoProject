@@ -202,9 +202,13 @@ void ENVIRONMENT::Create_Joint( dWorldID world, dSpaceID space, int index) {
 
 	OBJECT *firstObject = objects[ joints[index]->Get_First_Object_Index() ];
 
-        OBJECT *secondObject = objects[ joints[index]->Get_Second_Object_Index() ];
-
-	joints[index]->Create_In_Simulator(	world, firstObject , secondObject );
+        if (joints[index]->Get_Second_Object_Index() == -1){
+                joints[index]->Create_In_Simulator( world, firstObject);
+        }
+        else{
+                OBJECT *secondObject = objects[ joints[index]->Get_Second_Object_Index() ];
+                joints[index]->Create_In_Simulator(     world, firstObject , secondObject );        
+        }
 
 	numberOfJoints++;
 }

@@ -5,6 +5,7 @@ import constants
 
 from subprocess import Popen, PIPE
 
+
 class PYROSIM:
 
 	def __init__(self,playBlind=False,playPaused=False,evalTime=constants.evaluationTime):
@@ -107,7 +108,7 @@ class PYROSIM:
 
                 self.Send(outputString)
 
-        def Send_Joint(self, ID=0, firstObjectID=0, secondObjectID=1, x=0, y=0, z=0, n1=0, n2=0, n3=1, lo=-math.pi/4.0, hi=+math.pi/4.0 , speed=1.0):
+        def Send_Joint(self, ID=0, firstObjectID=0, secondObjectID=-1, x=0, y=0, z=0, n1=0, n2=0, n3=1, lo=-math.pi/4.0, hi=+math.pi/4.0 , speed=1.0):
 
                 outputString = 'Joint'
 
@@ -132,7 +133,7 @@ class PYROSIM:
                 outputString = outputString + '\n'
 
                 self.Send(outputString)
-
+      
 	def Send_Light_Sensor(self, ID, objectIndex = 0 ):
 
                 outputString = 'LightSensor'

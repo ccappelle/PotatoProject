@@ -13,14 +13,15 @@ JOINT = 2
 SENSOR = 3
 
 class Robot(object):
-	def __init__(self,x=0,y=0,z=1.0):
+	def __init__(self):
 		self.genome=robogenome.Genome()
 		self.num_body_parts = 0
 		self.num_joints = 0
 		self.num_sensors = 0
 		self.num_neurons = 0
 		
-	def Send_To_Simulator(self,sim,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
+	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
+						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		num_objects = 0
 		num_sensors = 0
 		num_joints = 0

@@ -6,8 +6,10 @@ PARAMS = 'paramaters'
 class Genome(object):
 	def __init__(self):
 		self.body_parts = {}
+		self.joints = {}
 		self.brain_parts = {}
-		self.brain_parts={}
+		self.senors = {}
+
 		self.body_index = 0
 		self.brain_index = 0
 		self.num_joints = 0
@@ -26,10 +28,19 @@ class Genome(object):
 			self.brain_index += 1
 
 	def Add_Body_Part(self,part_type,part_params={}):
-		self.Add_Part(BODY,part_type,part_params)
+		self.body_parts[self.body_index] = {}
+		self.body_parts[self.body_index][TYPE] = part_type
+		self.body_parts[self.body_index][PARAMS] = part_params
+		self.body_index += 1
+
 
 	def Add_Brain_Part(self,part_type,part_params={}):
 		self.Add_Part(BRAIN,part_type,part_params)
+
+
+	def Add_Cylinder(self, part_params={}):
+
+	
 
 	def Print(self):
 		print 'body'
