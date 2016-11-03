@@ -7,8 +7,7 @@ from subprocess import Popen, PIPE
 
 class PYROSIM:
 
-	def __init__(self,playBlind=False,playPaused=False,evalTime=constants.evaluationTime):
-                from subprocess import Popen, PIPE
+	def __init__(self,playBlind=False,playPaused=False,evalTime=constants.evaluationTime,xyz=(0.,-5.,3.),hpr=(90.0,-25.,0.0)):
                 if playBlind: #Protect against hidden simumlators
                         playPaused = False
 
@@ -31,6 +30,10 @@ class PYROSIM:
                 self.simulator = Popen(commandsToSend, stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
                 # self.simulator = Popen(commandsToSend, stdout=PIPE, stdin=PIPE)
+                for i in range(len(xyz)):
+                        self.Send(str(xyz[i])+'\n')
+                for j in range(len(hpr)):
+                        self.Send(str(hpr[j])+'\n')
 
                 self.Send('EvaluationTime '+str(evalTime)+'\n')
 

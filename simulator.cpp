@@ -28,6 +28,8 @@ int runBlind;
 ENVIRONMENT *environment;
 int numberOfBodies = 0;
 static dGeomID ground;
+static float xyz[3] = {0.8317f,-0.9817f,0.8000f};
+static float hpr[3] = {121.0000f,-27.5000f,0.0000f};
 
 void Draw_Distance_Sensor(dGeomID myGeom, dGeomID hisGeom);
 
@@ -122,9 +124,6 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 static void start()
 {
   dAllocateODEDataForThread(dAllocateMaskAll);
-
-  static float xyz[3] = {0.8317f,-0.9817f,0.8000f};
-  static float hpr[3] = {121.0000f,-27.5000f,0.0000f};
   dsSetViewpoint (xyz,hpr);
 }
 
@@ -203,6 +202,17 @@ void Initialize_Environment(void) {
         environment = new ENVIRONMENT();
 }
 
+
+void Read_Camera_From_Python(void){
+    for (int i=0;i<3;i++){
+    std::cin >> (xyz[i]);
+  }
+  for (int j=0;j<3;j++){
+    std::cin >> (hpr[j]);
+  }
+
+}
+
 void Read_From_Python(void) {
 
 	environment->Read_From_Python(world,space,&evaluationTime);
@@ -228,8 +238,8 @@ int main (int argc, char **argv)
 	runBlind = false; 
 
 	if ( (argc > 1) && (strcmp(argv[1],"-blind")==0) )
-
-		runBlind = true;
+    runBlind = true;
+        Read_Camera_From_Python();
 
         Initialize_ODE();
 

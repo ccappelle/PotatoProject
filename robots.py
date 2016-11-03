@@ -1,6 +1,6 @@
 import networks
 import subprocess
-import robogenome
+import simObjects
 from pyrosim import PYROSIM
 import copy
 import math
@@ -14,57 +14,62 @@ SENSOR = 3
 
 class Robot(object):
 	def __init__(self):
-		self.genome=robogenome.Genome()
-		self.num_body_parts = 0
-		self.num_joints = 0
-		self.num_sensors = 0
-		self.num_neurons = 0
+		self.body_parts=[]
+		self.joints=[]
+		self.sensors = []
+		self.network = False
+
 		
 	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
-						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-		num_objects = 0
-		num_sensors = 0
-		num_joints = 0
-		num_neurons = 0
-		for i in self.genome.body_parts:
-			part_type, part_params = self.genome.Get_Body_Part(i)
-			if 'ID' not in part_params:
-				if part_type == BOX or part_type == CYLINDER:
-					part_params['ID'] = objID
-				elif part_type == JOINT:
-					part_params['ID'] = jointID
-				elif part_type == SENSOR:
-					part_params['ID'] = sensorID
+						objID=0,jointID=0,sensorID=0,neuronID=0):
+		num_body_parts = len(self.body_parts)
+		num_joints = len(self.joints)
+		num_sensors = len(self.sensors)
+		if (self.network):
+			num_neurons = self.network.num_neurons
+		else:
+			num_neurons = 0
 
-			if part_type==BOX:
-				part_params['ID'] += objID
-				sim.Send_Box(**part_params)
-				part_params['ID'] -= objID
-				num_objects += 1
+		for bp in self.body_parts:
+			bp.Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset,
+										z_offset=z_offset,ID_offset=objID)
+		for j in self.joints:
+			j.Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset,
+								ID_offset=jointID,object_ID_offset=objID)
+		for s in self.sensors:
+			s.Send_To_Simulator(sim,ID_offset=sensorID,object_ID_offset=objID)
 
-			elif part_type==CYLINDER:
-				part_params['ID'] += objID
-				sim.Send_Cylinder(**part_params)
-				part_params['ID'] -= objID
-				num_objects += 1
+		if (self.network):
+			return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors
+		else:
+			return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors,neuronID+num_neurons
 
-			elif part_type==JOINT:
-				part_params['ID'] += jointID
-				sim.Send_Joint(**part_params)
-				part_params['ID'] -= jointID
-				num_joints += 1
-
-			elif part_type==SENSOR:
-				part_params['ID'] += sensorID
-				sim.Send_Joint(**part_params)
-				part_params['ID'] -= sensorID
-				num_sensors += 1
+	def Add_Cylinder(self, **kwargs):
+		cylinder = simObjects.Cylinder(**kwargs)
+		self.body_parts.append(cylinder)
 
 
-		return objID+num_objects,jointID+num_joints,sensorID+num_sensors,neuronID+num_neurons
+	def Add_Box(self, **kwargs):
+		if (kwargs):
+			box = simObjects.Box(kwargs)
+		else:
+			box = simObjects.Box()
+		self.body_parts.append(box)
+
+	def Add_Hinge_Joint(self, **kwargs):
+		joint = simObjects.HingeJoint(**kwargs)
+		self.joints.append(joint)
+
+	def Add_Touch_Sensor(self,**kwargs):
+		sensor = simObjects.TouchSensor(**kwargs)
+		self.sensors.append(sensor)
+
+	def Add_Position_Sensor(self,**kwargs):
+		sensor = simObjects.PositionSensor(**kwargs)
+		self.sensors.append(sensor)
 
 class NPed(object):
-	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=CREATE_NETWORK,z_incr=0.05): 
+	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=False,z_incr=0.05): 
 		self.pos = self.x,self.y,self.z = x,y,z
 		self.body_length = body_length
 		self.body_height = body_height
@@ -72,11 +77,12 @@ class NPed(object):
 		self.z_incr = z_incr
 		self.leg_length = self.z
 		self.radius = .5*self.body_height
-		self.network = network
 		self.num_legs = num_legs
 
-		if self.network == CREATE_NETWORK:
+		if not(network):
 			self.Add_Random_Network()
+		else:
+			self.network = network
 
 
 	def Add_Network(self,network):
@@ -129,13 +135,13 @@ class NPed(object):
 			#Hip joint
 			sim.Send_Joint(ID=jointID, firstObjectID=bodyID, secondObjectID=thighID, 
 							x=leg_x*self.body_length/2.+self.x,y=leg_y*self.body_length/2.+self.y,z=self.z+self.z_incr,
-							n1=-leg_y,n2=leg_x,n3=0)
+							n1=-leg_y,n2=leg_x,n3=0,speed=.75)
 			jointID+=1
 
 			#Knee Joint
 			sim.Send_Joint(ID=jointID, firstObjectID=thighID, secondObjectID=calfID, 
 							x=leg_x*bl_length2+self.x,y=leg_y*bl_length2+self.y,z=self.z+self.z_incr,
-							n1=-leg_y,n2=leg_x,n3=0)
+							n1=-leg_y,n2=leg_x,n3=0,speed=.75)
 			jointID+=1
 
 			#Sensor on feet
@@ -170,7 +176,6 @@ class NPed(object):
 				for j in range(self.network.total_neurons):
 					if not(self.network.adj_matrix[i,j]==0): #Connect neurons with synapses from network adj matrix
 						rand = 2.0*np.random.rand()-1.0
-						print rand
 						sim.Send_Changing_Synapse( sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,start_weight=0.0, 
 													end_weight=rand, start_time=sim.evaluationTime/2, end_time=sim.evaluationTime)
 
@@ -222,16 +227,25 @@ if __name__ == "__main__":
 	jointID = 0
 	sensorID = 0
 	neuronID = 0
-	pos_sensor_list = []
-	N = 10
-	for i in range(N): #Create N potatoes, each with a different random flavor
-		color = np.random.rand(3)
-		pedBot = NPed(x=i*1.5-N/2,num_legs=i,color=color)
-		objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-		pos_sensor_list.append(sensorID-1)
 
+	robo = Robot()
+	robo.Add_Box()
+	robo.Send_To_Simulator(sim)
 	sim.Start()
-	sim.Wait_To_Finish()
+	# N = 10
+	# Start = 0
+	# incr = 1.5
+	# index = 0
+
+	# for i in range(Start,N+1): #Create N potatoes, each with a different random flavor
+	# 	color = np.random.rand(3)
+	# 	x= incr*((Start-N)/2.0+index)
+	# 	pedBot = NPed(x=x,num_legs=i,color=color)
+	# 	objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
+	# 	pos_sensor_list.append(sensorID-1)
+	# 	index += 1
+	# sim.Start()
+	# sim.Wait_To_Finish()
 
 
 	
