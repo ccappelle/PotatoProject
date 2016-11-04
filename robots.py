@@ -18,10 +18,10 @@ class Robot(object):
 		self.body_parts=[]
 		self.joints=[]
 		self.sensors = []
-
+		self.network = False
 		
 	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
-						objID=0,jointID=0,sensorID=0,neuronID=0):
+						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		num_body_parts = len(self.body_parts)
 		num_joints = len(self.joints)
 		num_sensors = len(self.sensors)
@@ -138,8 +138,8 @@ class NPed(Robot):
 		self.network = network
 
 	def Add_Random_Network(self):
-		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,num_hidden=self.num_legs*2,num_motors=self.num_legs*2)
-		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=1,num_hidden=self.num_legs*2)
+		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,hidden_per_layer=self.num_legs*2,num_motors=self.num_legs*2)
+		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=1,hidden_per_layer=self.num_legs*2)
 	def Send_To_Simulator(self,sim, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		IDs = super(NPed,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
 												objID=objID,jointID=jointID,sensorID=sensorID)
@@ -149,62 +149,47 @@ class NPed(Robot):
 		last_neuronID = neuronID
 		##### SEND NETWORK ###############################
 		if send_network:
-
-			#Sends a neural net to the simulator
-			sensor_neuron_start = neuronID
-			for sensor_index in range(self.network.num_sensors): #Send sensor neurons to sim
-				sim.Send_Sensor_Neuron(ID=sensor_neuron_start+sensor_index,sensorID=sensorID+sensor_index)
-
-			hidden_neuron_start = sensor_neuron_start + self.network.num_sensors
-			for hidden_index in range(self.network.num_layers*self.network.num_hidden): #Send hidden neurons to sim
-				sim.Send_Hidden_Neuron(ID=hidden_neuron_start+hidden_index)
-
-			motor_neuron_start = hidden_neuron_start + self.network.num_hidden*self.network.num_layers
-			for motor_index in range(self.network.num_motors): #Send motor neurons to sim
-				sim.Send_Motor_Neuron(ID=motor_neuron_start+motor_index, jointID= jointID+motor_index)
-
-			for i in range(self.network.total_neurons):
-				for j in range(self.network.total_neurons):
-					if not(self.network.adj_matrix[i,j]==0): #Connect neurons with synapses from network adj matrix
-						#rand = 2.0*np.random.rand()-1.0
-						sim.Send_Changing_Synapse( sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,start_weight=self.network.adj_matrix[i,j], 
-													end_weight=0.0, start_time=0, end_time=sim.evaluationTime/2)
-						#sim.Send_Synapse(sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,weight=self.network.adj_matrix[i,j])
-			last_neuronID = neuronID + self.network.total_neurons
-
-		
+			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID)
+			last_neuronID += self.network.total_neurons
 
 		return last_objID,last_jointID,last_sensorID,last_neuronID
 
-	def Mutate_Network(self,var=-1,sigma=-1):
-		if var<1 and var>0:
-			self.network.Mutate_p(p=var,sigma=sigma)
-		elif var>=1:
-			self.network.Mutate_n(n=var,sigma=sigma)
+	def Mutate_Network(self,variable=-1,sigma=-1):
+		if variable<1 and variable>0:
+			self.network.Mutate_p(p=variable,sigma=sigma)
+		elif variable>=1:
+			self.network.Mutate_n(n=variable,sigma=sigma)
 		else:
 			self.network.Mutate_p(sigma=sigma)
 
 
-	def Copy_And_Mutate(self,var=-1,sigma=-1):
+	def Copy_And_Mutate(self,variable=-1,sigma=-1):
 		mutant = copy.deepcopy(self)
-		mutant.Mutate_Network(var=var,sigma=sigma)
+		mutant.Mutate_Network(variable=variable,sigma=sigma)
 		return mutant
 
 	def Get_Adj_Matrix(self):
 		return self.network.Get_Adj_Matrix()
+
 class Quadruped(NPed):
 	def __init__(self,*args,**kwargs):
 		super(Quadruped,self).__init__(num_legs=4,*args,**kwargs)
 
 
-def Test_2(sim):
+def _Test_Mutate_Quad(sim):
+	quad = Quadruped(color=[0.4,0.4,1.0])
+	IDs = quad.Send_To_Simulator(sim)
+	newQuad = quad.Copy_And_Mutate(variable=.99,sigma=5)
+	newQuad.Send_To_Simulator(sim, objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
+	sim.Start()
+def _Test_Robot_Army(sim):
 	import numpy as np
-	N = 6
+	N = 5
 	IDs = [0,0,0,0]
 	nped = Quadruped(color=[1.0,.4,.5])
 
 	for x in np.linspace(-N,N,num=N):
-		for y in np.linspace(-1,N,num=N):
+		for y in np.linspace(-1,N*2,num=N*2):
 			IDs = nped.Send_To_Simulator(sim,x_offset=x,y_offset=y,objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
 
 	sim.Start()
@@ -214,7 +199,7 @@ if __name__ == "__main__":
 	
 	import numpy as np
 
-	T = 1000
+	T = 500
 	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 	objID = 0
 	jointID = 0
@@ -225,5 +210,6 @@ if __name__ == "__main__":
 	Start = 0
 	incr = 1.5
 	index = 0
-	Test_2(sim)
-	#Test_1(sim)
+	#Robot_Army(sim)
+	_Test_Mutate_Quad(sim)
+
