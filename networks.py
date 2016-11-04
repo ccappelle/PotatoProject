@@ -1,6 +1,6 @@
 import numpy as np
 
-class LayeredNetwork():
+class LayeredNetwork(object):
 
 	def __init__(self,num_sensors=2,num_layers=1, num_hidden=4, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
 		#Create an layered network with random weights returned as adjacency matrix

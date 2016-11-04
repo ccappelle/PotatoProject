@@ -22,8 +22,8 @@ class Shape(object):
 		return kwargs
 
 class Cylinder(Shape):
-	def __init__(self,x=0, y=0, z=0, r1=0, r2=0, r3=1, length=1.0, radius=0.1, r=1, g=1, b=1):
-		super(Cylinder,self).__init__(x=x,y=y,z=z,r=r,g=g,b=b)
+	def __init__(self,ID=0,x=0, y=0, z=0, r1=0, r2=0, r3=1, length=1.0, radius=0.1, r=1, g=1, b=1):
+		super(Cylinder,self).__init__(ID=ID,x=x,y=y,z=z,r=r,g=g,b=b)
 		self.r1 = r1
 		self.r2 = r2
 		self.r3 = r3
@@ -31,12 +31,11 @@ class Cylinder(Shape):
 		self.radius = radius
 
 	def Send_To_Simulator(self,sim,x_offset=0,y_offset=0,z_offset=0,ID_offset=0):
-		kwargs = self.Get_kwargs(x_offset,y_offset,z_offset,ID_Offset)
-		p
-		sim.Send_Cylinder(kwargs)
+		kwargs = self.Get_kwargs(x_offset=x_offset,y_offset=y_offset,z_offset=z_offset,ID_offset=ID_offset)
+		sim.Send_Cylinder(**kwargs)
 
 	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_offset=0):
-		kwargs = super(Cylinder,self).Get_kwargs(x_offset,y_offset,z_offset,ID_Offset)
+		kwargs = super(Cylinder,self).Get_kwargs(x_offset,y_offset,z_offset,ID_offset)
 		kwargs['r1'] = self.r1
 		kwargs['r2'] = self.r2
 		kwargs['r3'] = self.r3
@@ -95,15 +94,11 @@ class HingeJoint(Joint):
 		self.hi = hi
 
 	def Send_To_Simulator(self,sim,x_offset=0,y_offset=0,z_offset=0,object_ID_offset=0,ID_offset=0):
-		kwargs = self.Get_kwargs(x_offset,y_offset,z_offset,ID_Offset,object_ID_offset)
-		sim.Send_Joint(self,ID=self.ID+ID_offset,
-						firstObjectID=self.firstObjectID+object_ID_offset,
-						secondObjectID=secondObjectID, x=self.x+x_offset,
-						y=self.y+y_offset, z=self.z+z_offset,n1=self.n1,
-						n2=self.n2,n3=self.n3,lo=self.lo,hi=self.hi)
+		kwargs = self.Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
+		sim.Send_Joint(**kwargs)
 
-	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_Offset=0,object_ID_offset=0):
-		kwargs = super(HingeJoint,self).Get_kwargs(x_offset,y_offset,z_offset,ID_Offset,object_ID_offset)
+	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_offset=0,object_ID_offset=0):
+		kwargs = super(HingeJoint,self).Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
 		if self.secondObjectID < 0:
 			kwargs['secondObjectID'] = -1
 		kwargs['lo'] = self.lo
@@ -137,7 +132,7 @@ class PositionSensor(Sensor):
 		sim.Send_Position_Sensor(**kwargs)
 
 class TouchSensor(Sensor):
-	def Send_To_Simulator(self,sim,ID_Offset=0,object_ID_offset=0):
+	def Send_To_Simulator(self,sim,ID_offset=0,object_ID_offset=0):
 		kwargs = self.Get_kwargs(ID_offset,object_ID_offset)
 		sim.Send_Touch_Sensor(**kwargs)
 

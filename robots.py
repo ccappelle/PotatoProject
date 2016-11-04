@@ -11,13 +11,13 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
+MOTOR_SPEED = 0.75
 
 class Robot(object):
 	def __init__(self):
 		self.body_parts=[]
 		self.joints=[]
 		self.sensors = []
-		self.network = False
 
 		
 	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
@@ -25,10 +25,7 @@ class Robot(object):
 		num_body_parts = len(self.body_parts)
 		num_joints = len(self.joints)
 		num_sensors = len(self.sensors)
-		if (self.network):
-			num_neurons = self.network.num_neurons
-		else:
-			num_neurons = 0
+
 
 		for bp in self.body_parts:
 			bp.Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset,
@@ -39,10 +36,7 @@ class Robot(object):
 		for s in self.sensors:
 			s.Send_To_Simulator(sim,ID_offset=sensorID,object_ID_offset=objID)
 
-		if (self.network):
-			return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors
-		else:
-			return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors,neuronID+num_neurons
+		return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors
 
 	def Add_Cylinder(self, **kwargs):
 		cylinder = simObjects.Cylinder(**kwargs)
@@ -68,8 +62,9 @@ class Robot(object):
 		sensor = simObjects.PositionSensor(**kwargs)
 		self.sensors.append(sensor)
 
-class NPed(object):
+class NPed(Robot):
 	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=False,z_incr=0.05): 
+		super(NPed,self).__init__()
 		self.pos = self.x,self.y,self.z = x,y,z
 		self.body_length = body_length
 		self.body_height = body_height
@@ -78,12 +73,69 @@ class NPed(object):
 		self.leg_length = self.z
 		self.radius = .5*self.body_height
 		self.num_legs = num_legs
+		self.body_ID = 0
+		self.joint_ID = 0
+		self.sensor_ID = 0
+		self.Add_Body()
+
 
 		if not(network):
 			self.Add_Random_Network()
 		else:
-			self.network = network
+			self.network = network.Send_To_Simulator()
 
+	def Add_Body(self):
+		object_ID = 0
+		body_ID = 0
+		sensor_ID = 0
+		joint_ID = 0
+
+		self.Add_Box(ID=body_ID,x=self.x,y=self.y,z=self.z+self.z_incr,
+						length=self.body_length,width=self.body_length,
+						height=self.body_height,r=self.r,g=self.g,b=self.b)
+		object_ID += 1
+
+		delta = 0.
+		for i in range(self.num_legs):
+			leg_pos = (math.cos(delta),math.sin(delta))
+			delta += math.pi/((self.num_legs)/2.0)
+
+			l1,l2 = (self.body_length+self.leg_length)/2., self.body_length/2.+self.leg_length
+
+			thigh_ID = object_ID
+			object_ID += 1
+			calf_ID = object_ID
+			object_ID += 1
+			hip_ID = joint_ID
+			joint_ID += 1
+			knee_ID = joint_ID
+			joint_ID += 1
+
+			self.Add_Cylinder(ID=thigh_ID,x=leg_pos[0]*l1+self.x,y=leg_pos[1]*l1+self.y,
+								z=self.z+self.z_incr,r1=leg_pos[0],r2=leg_pos[1],r3=0,
+								length=self.leg_length, radius=self.radius, r=self.r,
+								g=self.g, b=self.b)
+
+			self.Add_Cylinder(ID=calf_ID,x=leg_pos[0]*l2+self.x,y=leg_pos[1]*l2+self.y,
+								z=self.z/2.+self.z_incr, r1=0,r2=0,r3=1,length=self.leg_length,
+								radius=self.radius,r=self.r,g=self.g,b=self.b)
+
+			self.Add_Hinge_Joint(ID=hip_ID,firstObjectID=body_ID,secondObjectID=thigh_ID,
+								x=leg_pos[0]*self.body_length/2.+self.x, 
+								y=leg_pos[1]*self.body_length/2.+self.y,
+								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[1],n3=0,speed=MOTOR_SPEED)
+			self.Add_Hinge_Joint(ID=knee_ID,firstObjectID=thigh_ID,secondObjectID=calf_ID,
+								x=leg_pos[0]*l2+self.x,y=leg_pos[1]*l2+self.y,
+								z=self.z+self.z_incr,n1=-leg_pos[1],n2=leg_pos[0],
+								speed=MOTOR_SPEED)
+			self.Add_Touch_Sensor(ID=sensor_ID,object_ID=calf_ID)
+			sensor_ID+= 1
+		self.Add_Position_Sensor(ID=sensor_ID,object_ID=body_ID)
+		sensor_ID+=1
+
+		self.body_ID = body_ID
+		self.sensor_ID = sensor_ID
+		self.joint_ID = joint_ID
 
 	def Add_Network(self,network):
 		self.network = network
@@ -92,69 +144,10 @@ class NPed(object):
 		self.network = networks.LayeredNetwork(num_sensors=self.num_legs,num_hidden=self.num_legs*2,num_motors=self.num_legs*2)
 
 	def Send_To_Simulator(self,sim, objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-		
-		init_sensorID = sensorID
-		init_jointID = jointID
-		init_objID = objID
-		#self.Send_Body()
-
-		bodyID = objID
-		objID += 1
-		(r,g,b) = self.color
-
-		#Body 
-		sim.Send_Box(ID=bodyID, x=self.x,y=self.y,z=self.z+self.z_incr,
-					length=self.body_length,width=self.body_length,
-					height=self.body_height,r=self.r,g=self.g,b=self.b)
-
-		#Auto asign legs based on how high the body is set to be
-
-		delta = 0.
-		num_legs = self.num_legs
-		for i in range(num_legs):
-			leg_x = math.cos(delta)
-			leg_y = math.sin(delta)
-			delta += math.pi/((num_legs)/2.0)
-			bl_length1 = (self.body_length+self.leg_length)/2.
-			bl_length2 = self.body_length/2.+self.leg_length
-
-			thighID = objID
-			objID += 1
-			calfID = objID
-			objID += 1
-			#Thigh
-			sim.Send_Cylinder(ID=thighID, x=leg_x*bl_length1+self.x,y=leg_y*bl_length1+self.y,
-								z=self.z+self.z_incr,r1=leg_x,r2=leg_y,r3=0,length=self.leg_length,
-								radius=self.radius,r=self.r,g=self.g,b=self.b)
-			
-			#Calf
-			sim.Send_Cylinder(ID=calfID, x=leg_x*bl_length2+self.x,y=leg_y*bl_length2+self.y,
-								z=self.z/2.+self.z_incr,r1=0,r2=0,r3=1, length=self.z,radius=self.radius,
-								r=self.r,g=self.g,b=self.b)
-
-			#Hip joint
-			sim.Send_Joint(ID=jointID, firstObjectID=bodyID, secondObjectID=thighID, 
-							x=leg_x*self.body_length/2.+self.x,y=leg_y*self.body_length/2.+self.y,z=self.z+self.z_incr,
-							n1=-leg_y,n2=leg_x,n3=0,speed=.75)
-			jointID+=1
-
-			#Knee Joint
-			sim.Send_Joint(ID=jointID, firstObjectID=thighID, secondObjectID=calfID, 
-							x=leg_x*bl_length2+self.x,y=leg_y*bl_length2+self.y,z=self.z+self.z_incr,
-							n1=-leg_y,n2=leg_x,n3=0,speed=.75)
-			jointID+=1
-
-			#Sensor on feet
-			sim.Send_Touch_Sensor(ID=sensorID, objectIndex=calfID)
-			sensorID += 1
-		
-		#Send a position sensor attached to the body
-		sim.Send_Position_Sensor(ID=sensorID,objectIndex=bodyID)
-		sensorID +=1
-
-		last_sensorID = sensorID
-		last_objID = objID
-		last_jointID = jointID
+		IDs = super(NPed,self).Send_To_Simulator(sim,objID=objID,jointID=jointID,sensorID=sensorID)
+		last_objID = IDs[0]
+		last_jointID = IDs[1]
+		last_sensorID = IDs[2]
 
 		##### SEND NETWORK ###############################
 		if send_network:
@@ -162,7 +155,7 @@ class NPed(object):
 			#Sends a neural net to the simulator
 			sensor_neuron_start = neuronID
 			for sensor_index in range(self.network.num_sensors): #Send sensor neurons to sim
-				sim.Send_Sensor_Neuron(ID=sensor_neuron_start+sensor_index,sensorID=sensor_index+init_sensorID)
+				sim.Send_Sensor_Neuron(ID=sensor_neuron_start+sensor_index,sensorID=sensorID+sensor_index)
 
 			hidden_neuron_start = sensor_neuron_start + self.network.num_sensors
 			for hidden_index in range(self.network.num_layers*self.network.num_hidden): #Send hidden neurons to sim
@@ -170,7 +163,7 @@ class NPed(object):
 
 			motor_neuron_start = hidden_neuron_start + self.network.num_hidden*self.network.num_layers
 			for motor_index in range(self.network.num_motors): #Send motor neurons to sim
-				sim.Send_Motor_Neuron(ID=motor_neuron_start+motor_index, jointID= init_jointID+motor_index)
+				sim.Send_Motor_Neuron(ID=motor_neuron_start+motor_index, jointID= jointID+motor_index)
 
 			for i in range(self.network.total_neurons):
 				for j in range(self.network.total_neurons):
@@ -228,10 +221,13 @@ if __name__ == "__main__":
 	sensorID = 0
 	neuronID = 0
 
-	robo = Robot()
-	robo.Add_Box()
-	robo.Send_To_Simulator(sim)
+	pedBot = Robot()
+	pedBot.Add_Box()
+	pedBot.Add_Cylinder(ID=1)
+	pedBot.Add_Hinge_Joint(ID=0,firstObjectID=0)
+	pedBot.Send_To_Simulator(sim)
 	sim.Start()
+	
 	# N = 10
 	# Start = 0
 	# incr = 1.5
@@ -242,7 +238,6 @@ if __name__ == "__main__":
 	# 	x= incr*((Start-N)/2.0+index)
 	# 	pedBot = NPed(x=x,num_legs=i,color=color)
 	# 	objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-	# 	pos_sensor_list.append(sensorID-1)
 	# 	index += 1
 	# sim.Start()
 	# sim.Wait_To_Finish()
