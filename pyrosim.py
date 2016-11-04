@@ -111,7 +111,6 @@ class PYROSIM:
                 self.Send(outputString)
 
         def Send_Joint(self, ID=0, firstObjectID=0, secondObjectID=-1, x=0, y=0, z=0, n1=0, n2=0, n3=1, lo=-math.pi/4.0, hi=+math.pi/4.0 , speed=1.0):
-
                 outputString = 'Joint'
 
                 outputString = outputString + ' ' + str(ID)
@@ -232,10 +231,10 @@ class PYROSIM:
 
                 self.Send(outputString)
 
-        def Send_Synapse(self, sourceNeuronIndex = 0 , targetNeuronIndex = 0 , weight = 0.0 ):
+        def Send_Synapse(self, sourceNeuronIndex = 0 , targetNeuronIndex = 1 , weight = 0.0 ):
 	        self.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,start_weight=weight,end_weight=weight,start_time=0,end_time=0)
 	
-        def Send_Changing_Synapse(self, sourceNeuronIndex=0, targetNeuronIndex=0, start_weight=0.0,end_weight=0.0,start_time=0,end_time=0):
+        def Send_Changing_Synapse(self, sourceNeuronIndex=0, targetNeuronIndex=1, start_weight=0.0,end_weight=0.0,start_time=0,end_time=0):
                 outputString = 'Synapse'
 
                 outputString = outputString + ' ' + str(sourceNeuronIndex)
@@ -288,6 +287,8 @@ class PYROSIM:
 
                 self.Collect_Sensor_Data(dataFromSimulator)
 
+        def Get_Results(self):
+                return self.dataFromPython
 # --------------------- Private methods -----------------------------
 
 	def Collect_Sensor_Data(self,dataFromSimulator):

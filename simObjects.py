@@ -84,7 +84,7 @@ class Joint(object):
 		return kwargs
 
 class HingeJoint(Joint):
-	def __init__(self,ID=0,firstObjectID=0,secondObjectID=-1,x=0,y=0,z=0,n1=0,n2=0,n3=0,lo=-math.pi/4.0,hi=math.pi/4.0,speed=1.0):
+	def __init__(self,ID=0,firstObjectID=0,secondObjectID=-1,x=0,y=0,z=0,n1=0,n2=0,n3=1,lo=-math.pi/4.0,hi=math.pi/4.0,speed=1.0):
 		super(HingeJoint,self).__init__(ID=ID,firstObjectID=firstObjectID,secondObjectID=secondObjectID,
 										x=x,y=y,z=z)
 		self.n1 = n1
@@ -92,6 +92,7 @@ class HingeJoint(Joint):
 		self.n3 = n3
 		self.lo = lo
 		self.hi = hi
+		self.speed=speed
 
 	def Send_To_Simulator(self,sim,x_offset=0,y_offset=0,z_offset=0,object_ID_offset=0,ID_offset=0):
 		kwargs = self.Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
@@ -101,12 +102,13 @@ class HingeJoint(Joint):
 		kwargs = super(HingeJoint,self).Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
 		if self.secondObjectID < 0:
 			kwargs['secondObjectID'] = -1
+
 		kwargs['lo'] = self.lo
 		kwargs['hi'] = self.hi
 		kwargs['n1'] = self.n1
 		kwargs['n2'] = self.n2
 		kwargs['n3'] = self.n3
-
+		kwargs['speed'] = self.speed
 		return kwargs
 
 class Sensor(object):
@@ -137,3 +139,20 @@ class TouchSensor(Sensor):
 		sim.Send_Touch_Sensor(**kwargs)
 
 
+if __name__ == '__main__':
+	from pyrosim import PYROSIM
+
+	sim = PYROSIM(evalTime=200)
+	sim.Start()
+	# cyl = Cylinder(ID=0,z=1,r1=1,r2=0,r3=0)
+	# joint = HingeJoint(ID=0,z=1,n1=0,n2=0,n3=1)
+	# cyl.Send_To_Simulator(sim)
+	# joint.Send_To_Simulator(sim)
+	# sensor = PositionSensor(object_ID=0)
+	# sensor.Send_To_Simulator(sim)
+	# sim.Send_Sensor_Neuron(ID=0,sensorID=0,sensorValueIndex=2)
+	# sim.Send_Motor_Neuron(ID=1)
+	# sim.Send_Synapse(sourceNeuronIndex=0,targetNeuronIndex=1,weight=1.0)
+	# sim.Start()
+	# sim.Wait_To_Finish()
+	# data = sim.Get_Results()

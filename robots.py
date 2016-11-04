@@ -44,10 +44,7 @@ class Robot(object):
 
 
 	def Add_Box(self, **kwargs):
-		if (kwargs):
-			box = simObjects.Box(kwargs)
-		else:
-			box = simObjects.Box()
+		box = simObjects.Box(**kwargs)
 		self.body_parts.append(box)
 
 	def Add_Hinge_Joint(self, **kwargs):
@@ -123,10 +120,10 @@ class NPed(Robot):
 			self.Add_Hinge_Joint(ID=hip_ID,firstObjectID=body_ID,secondObjectID=thigh_ID,
 								x=leg_pos[0]*self.body_length/2.+self.x, 
 								y=leg_pos[1]*self.body_length/2.+self.y,
-								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[1],n3=0,speed=MOTOR_SPEED)
+								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[0],n3=0,speed=MOTOR_SPEED)
 			self.Add_Hinge_Joint(ID=knee_ID,firstObjectID=thigh_ID,secondObjectID=calf_ID,
 								x=leg_pos[0]*l2+self.x,y=leg_pos[1]*l2+self.y,
-								z=self.z+self.z_incr,n1=-leg_pos[1],n2=leg_pos[0],
+								z=self.z+self.z_incr,n1=-leg_pos[1],n2=leg_pos[0],n3=0,
 								speed=MOTOR_SPEED)
 			self.Add_Touch_Sensor(ID=sensor_ID,object_ID=calf_ID)
 			sensor_ID+= 1
@@ -141,14 +138,15 @@ class NPed(Robot):
 		self.network = network
 
 	def Add_Random_Network(self):
-		self.network = networks.LayeredNetwork(num_sensors=self.num_legs,num_hidden=self.num_legs*2,num_motors=self.num_legs*2)
-
-	def Send_To_Simulator(self,sim, objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-		IDs = super(NPed,self).Send_To_Simulator(sim,objID=objID,jointID=jointID,sensorID=sensorID)
+		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,num_hidden=self.num_legs*2,num_motors=self.num_legs*2)
+		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=1,num_hidden=self.num_legs*2)
+	def Send_To_Simulator(self,sim, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
+		IDs = super(NPed,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
+												objID=objID,jointID=jointID,sensorID=sensorID)
 		last_objID = IDs[0]
 		last_jointID = IDs[1]
 		last_sensorID = IDs[2]
-
+		last_neuronID = neuronID
 		##### SEND NETWORK ###############################
 		if send_network:
 
@@ -168,18 +166,15 @@ class NPed(Robot):
 			for i in range(self.network.total_neurons):
 				for j in range(self.network.total_neurons):
 					if not(self.network.adj_matrix[i,j]==0): #Connect neurons with synapses from network adj matrix
-						rand = 2.0*np.random.rand()-1.0
-						sim.Send_Changing_Synapse( sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,start_weight=0.0, 
-													end_weight=rand, start_time=sim.evaluationTime/2, end_time=sim.evaluationTime)
-
+						#rand = 2.0*np.random.rand()-1.0
+						sim.Send_Changing_Synapse( sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,start_weight=self.network.adj_matrix[i,j], 
+													end_weight=0.0, start_time=0, end_time=sim.evaluationTime/2)
+						#sim.Send_Synapse(sourceNeuronIndex=neuronID+i,targetNeuronIndex=neuronID+j,weight=self.network.adj_matrix[i,j])
 			last_neuronID = neuronID + self.network.total_neurons
 
 		
 
-		if send_network:
-			return last_objID,last_jointID,last_sensorID,last_neuronID
-		else:
-			return last_objID,last_jointID,last_sensorID
+		return last_objID,last_jointID,last_sensorID,last_neuronID
 
 	def Mutate_Network(self,var=-1,sigma=-1):
 		if var<1 and var>0:
@@ -202,58 +197,33 @@ class Quadruped(NPed):
 		super(Quadruped,self).__init__(num_legs=4,*args,**kwargs)
 
 
-if __name__ == "__main__":
-	pass
+def Test_2(sim):
 	import numpy as np
-	# sim = PYROSIM(playPaused=False,playBlind=False,evalTime = 500)
-	# robo = Robot()
-	# robo.genome.Add_Body_Part(BOX,{'ID':0,'x':4})
-	# robo.Send_To_Simulator(sim)
+	N = 6
+	IDs = [0,0,0,0]
+	nped = Quadruped(color=[1.0,.4,.5])
+
+	for x in np.linspace(-N,N,num=N):
+		for y in np.linspace(-1,N,num=N):
+			IDs = nped.Send_To_Simulator(sim,x_offset=x,y_offset=y,objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
+
+	sim.Start()
+
+
+if __name__ == "__main__":
 	
-	# sim.Start()
+	import numpy as np
 
-	#Test Simulation of multiple robots
-	T = 500
+	T = 1000
 	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
-
 	objID = 0
 	jointID = 0
 	sensorID = 0
 	neuronID = 0
-
-	pedBot = Robot()
-	pedBot.Add_Box()
-	pedBot.Add_Cylinder(ID=1)
-	pedBot.Add_Hinge_Joint(ID=0,firstObjectID=0)
-	pedBot.Send_To_Simulator(sim)
-	sim.Start()
 	
-	# N = 10
-	# Start = 0
-	# incr = 1.5
-	# index = 0
-
-	# for i in range(Start,N+1): #Create N potatoes, each with a different random flavor
-	# 	color = np.random.rand(3)
-	# 	x= incr*((Start-N)/2.0+index)
-	# 	pedBot = NPed(x=x,num_legs=i,color=color)
-	# 	objID,jointID,sensorID,neuronID = pedBot.Send_To_Simulator(sim, objID=objID,jointID=jointID,sensorID=sensorID,neuronID=neuronID)
-	# 	index += 1
-	# sim.Start()
-	# sim.Wait_To_Finish()
-
-
-	
-	# gaitData={}
-	# posData = np.zeros((3,T))
-	# for i in range(4):
-	# 	gaitData[i] = [0]*T
-	# 	for t in range(T):
-	# 		gaitData[i][t] = int(sim.dataFromPython[i,0,t])
-
-	# for t in range(T):
-	# 	for i in range(3):
-	# 		posData[i,t] = sim.dataFromPython[4,i,t]
-	# 	print posData[:,t]
-
-
+	N = 10
+	Start = 0
+	incr = 1.5
+	index = 0
+	Test_2(sim)
+	#Test_1(sim)
