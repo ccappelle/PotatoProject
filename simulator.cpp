@@ -107,8 +107,8 @@ static void nearCallback (void *data, dGeomID o1, dGeomID o2)
 	contact[i].surface.mode = dContactSlip1 | dContactSlip2 | dContactApprox1;
 
 	contact[i].surface.mu = dInfinity;
-	contact[i].surface.slip1 = 0.01;
-	contact[i].surface.slip2 = 0.01;
+	contact[i].surface.slip1 = 0.001;
+	contact[i].surface.slip2 = 0.001;
 
 	dJointID c = dJointCreateContact (world,contactgroup,&contact[i]);
 	dJointAttach (c,
@@ -189,7 +189,7 @@ void Initialize_ODE(void) {
   	world = dWorldCreate();
   	space = dHashSpaceCreate (0);
   	contactgroup = dJointGroupCreate (0);
-  	dWorldSetGravity (world,0,0,-0.5);
+  	dWorldSetGravity (world,0,0,-10.0);
   	ground = dCreatePlane (space,0,0,1,0);
  
 	dGeomSetData(ground,NULL); 

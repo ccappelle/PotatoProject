@@ -11,7 +11,7 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
-MOTOR_SPEED = 0.75
+MOTOR_SPEED = .5
 
 class Robot(object):
 	def __init__(self):
@@ -58,9 +58,13 @@ class Robot(object):
 	def Add_Position_Sensor(self,**kwargs):
 		sensor = simObjects.PositionSensor(**kwargs)
 		self.sensors.append(sensor)
+	def Play(self, T=100):
+		sim = PYROSIM(playPaused=False,playBlind=False,evalTime=T)
+		self.Send_To_Simulator(sim)
+		sim.Start()
 
 class NPed(Robot):
-	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=False,z_incr=0.05): 
+	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=False,z_incr=0.05,development_layers=1): 
 		super(NPed,self).__init__()
 		self.pos = self.x,self.y,self.z = x,y,z
 		self.body_length = body_length
@@ -73,6 +77,7 @@ class NPed(Robot):
 		self.body_ID = 0
 		self.joint_ID = 0
 		self.sensor_ID = 0
+		self.development_layers = development_layers
 		self.Add_Body()
 
 
@@ -139,8 +144,11 @@ class NPed(Robot):
 
 	def Add_Random_Network(self):
 		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,hidden_per_layer=self.num_legs*2,num_motors=self.num_legs*2)
-		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=1,hidden_per_layer=self.num_legs*2)
-	def Send_To_Simulator(self,sim, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
+		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=2,hidden_per_layer=self.num_legs*2,
+												development_layers=self.development_layers)
+	
+
+	def Send_To_Simulator(self,sim, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True,eval_time=500):
 		IDs = super(NPed,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
 												objID=objID,jointID=jointID,sensorID=sensorID)
 		last_objID = IDs[0]
@@ -149,7 +157,7 @@ class NPed(Robot):
 		last_neuronID = neuronID
 		##### SEND NETWORK ###############################
 		if send_network:
-			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID)
+			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID,eval_time=eval_time)
 			last_neuronID += self.network.total_neurons
 
 		return last_objID,last_jointID,last_sensorID,last_neuronID
@@ -170,6 +178,7 @@ class NPed(Robot):
 
 	def Get_Adj_Matrix(self):
 		return self.network.Get_Adj_Matrix()
+
 
 class Quadruped(NPed):
 	def __init__(self,*args,**kwargs):
