@@ -185,6 +185,23 @@ class Quadruped(NPed):
 		super(Quadruped,self).__init__(num_legs=4,*args,**kwargs)
 
 
+
+class Treebot(Robot):
+	def __init__(self, num_children=2,max_depth=2, branch_length=1):
+		super(Treebot,self).__init__()
+
+		t = Tree(num_children=num_children,current_depth=0,max_depth=max_depth,base_position=[0,0,0],lo_angle=-90,hi_angle=90,parent_angle=0,node_ID=0)
+
+		parts_list = t.Get_Parts()
+
+		for i in range(len(parts_list)):
+			part = parts_list[i]
+
+
+
+
+
+
 def _Test_Mutate_Quad(sim):
 	quad = Quadruped(color=[0.4,0.4,1.0])
 	IDs = quad.Send_To_Simulator(sim)

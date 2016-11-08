@@ -20,7 +20,7 @@ class Evolver(object):
 		self.max_generations = max_generations
 		self.development_layers = development_layers
 
-		for i in range(self.max_population_size):
+		for i in range(self.max_population_size*2):
 			self.Add_Random_Individual()
 
 
@@ -185,22 +185,9 @@ def Max_Y(sensor_data):
 	Y_DIR = 1
 	return sensor_data[POS_SENSOR,1,EVAL_TIME-1]
 
+def Show(best,N_SHOWS=3):
 
-def Sample_Run():
-	import robots
-	import numpy as np
-	pop_size = 50
-	generator_fcn = robots.Quadruped
-	fitness_fcn = Max_Y
-	gens = 100
-	N_SHOWS = 3
-	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=4,max_generations=gens)
-	evolver.Evaluate_Population()
-	evolver.Determine_If_Dominated()
-	
-	best = evolver.Evolve()
-
-	for i in range(0,gens,gens/N_SHOWS):
+	for i in range(0,len(best),len(best)/N_SHOWS):
 		robot_list = best[i]
 		IDs = [0,0,0,0]
 		sim = PYROSIM(playBlind=False,playPaused=False,evalTime=evolver.eval_time,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
@@ -213,6 +200,22 @@ def Sample_Run():
 			IDs = robot['genome'].Send_To_Simulator(sim,x_offset=xVec[i], objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
 		sim.Start()
 		sim.Wait_To_Finish()
+
+def Sample_Run():
+	import robots
+	import numpy as np
+	pop_size = 10
+	generator_fcn = robots.Quadruped
+	fitness_fcn = Max_Y
+	gens = 10
+	
+	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=1,max_generations=gens)
+	evolver.Evaluate_Population()
+	evolver.Determine_If_Dominated()
+	
+	best = evolver.Evolve()
+	print len(best)
+	Show(best)
 
 if __name__ == "__main__":
 	Sample_Run()

@@ -1,4 +1,7 @@
 import numpy as np
+import random
+LO_INIT = -1.
+HI_INIT = 1.
 
 class Network(object):
 	def __init__(self,num_sensors,num_hidden,num_motors,development_layers=1):
@@ -52,11 +55,12 @@ class Network(object):
 						end_time = self.adj_matrix[i,j,3]
 
 					start_time = int((start_time + 1.)*eval_time/2.)
-					end_time = int((end_time +1.)*eval_time/2.)
+					end_time = start_time + int((end_time +1.)*eval_time/2.)
 
 					sim.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,
 											start_weight=start_weight, end_weight=end_weight,
 											start_time=start_time,end_time=end_time)
+					print start_time, end_time, start_weight, end_weight
 class LayeredNetwork(Network):
 
 	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,development_layers=1):
@@ -71,9 +75,8 @@ class LayeredNetwork(Network):
 		self.hidden_recurrence = hidden_recurrence
 		self.motor_recurrence = motor_recurrence
 
-		#Random matrix where weights are drawn. Can be changed
 		neuronID = 0
-		rand_mat = 2.*np.random.rand(self.total_neurons,self.total_neurons,development_layers)-1.
+		
 		for from_layer in range(1+num_layers):
 			if from_layer == 0: #If layer is sensor layer
 				from_layer_size = num_sensors
@@ -93,9 +96,9 @@ class LayeredNetwork(Network):
 			for from_neuronID in range(from_neuron_start,from_neuron_start+from_layer_size):
 				for to_neuronID in range(to_neuron_start,to_neuron_start+to_layer_size):
 					for d_index in range(self.development_layers):
-						self.adj_matrix[from_neuronID,to_neuronID,d_index] = rand_mat[from_neuronID,to_neuronID,d_index]
+						self.adj_matrix[from_neuronID,to_neuronID,d_index] = random.uniform(LO_INIT,HI_INIT)
 						if back_connections == 1 and from_layer>0: #If back connections are on, connect back except to sensors
-							self.adj_matrix[to_neuronID,from_neuronID,d_index] = rand_mat[to_neuronID,from_neuronID,d_index]
+							self.adj_matrix[to_neuronID,from_neuronID,d_index] = random.uniform(LO_INIT,HI_INIT)
 				neuronID+=1	
 
 		if hidden_recurrence == 1: #If recurrent in hidden neurons add recurrent connections
@@ -120,14 +123,14 @@ class LayeredNetwork(Network):
 					sigma = 0.05
 
 			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				self.adj_matrix[fromID,toID,development_layer] = self.adj_matrix[fromID,toID,development_layer] + np.random.normal(0,sigma)
+				self.adj_matrix[fromID,toID,development_layer] = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
 
 		else:
 			if sigma<=0:
 				sigma = .5
 
 			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				new_value = self.adj_matrix[fromID,toID,development_layer] + np.random.normal(0,sigma)
+				new_value = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
 				if new_value>1:
 					new_value == 1
 				elif new_value<-1:
@@ -140,19 +143,21 @@ class LayeredNetwork(Network):
 			p= 1./float(self.total_weights)
 
 		weights = np.nonzero(self.adj_matrix)
-		rands = np.random.rand(self.total_weights)
 
 		for i in range(self.total_weights):
-			if rands[i]<p:
+			if random.random()<p:
 				fromID,toID,development_layer = weights[0][i],weights[1][i],weights[2][i]
 				self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
 
 	def Mutate_n(self,n,sigma=-1):
 		weights = np.nonzero(self.adj_matrix)
-		rands = np.random.permutation(self.total_weights)
+		#rands = np.random.permutation(self.total_weights)
+		vals_to_choose = range(self.total_weights)
 
 		for i in range(int(n)):
-			fromID, toID, development_layer = weights[0][rands[i]], weights[1][rands[i]], weights[2][rands[i]]
+			rand = random.randrange(len(vals_to_choose))
+			index = vals_to_choose.pop(rand)
+			fromID, toID, development_layer = weights[0][index], weights[1][index], weights[2][index]
 			self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
 
 def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
