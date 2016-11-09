@@ -60,7 +60,7 @@ class Network(object):
 					sim.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,
 											start_weight=start_weight, end_weight=end_weight,
 											start_time=start_time,end_time=end_time)
-					print start_time, end_time, start_weight, end_weight
+		
 class LayeredNetwork(Network):
 
 	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,development_layers=1):
@@ -159,6 +159,12 @@ class LayeredNetwork(Network):
 			index = vals_to_choose.pop(rand)
 			fromID, toID, development_layer = weights[0][index], weights[1][index], weights[2][index]
 			self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
+
+class TreeNetwork(Network):
+	def __init__(self, leaf_tips,num_motors, num_hidden, lineage):
+		self.synapse_list = []
+		self.neuron_list = []
+
 
 def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
 	BIPED_SENSORS = 2

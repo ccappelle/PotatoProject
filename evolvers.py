@@ -1,6 +1,7 @@
 from pyrosim import PYROSIM
 from operator import itemgetter
 import random
+import numpy as np
 
 EVAL_TIME = 500
 MAX_GENERATIONS = 300
@@ -190,7 +191,7 @@ def Show(best,N_SHOWS=3):
 	for i in range(0,len(best),len(best)/N_SHOWS):
 		robot_list = best[i]
 		IDs = [0,0,0,0]
-		sim = PYROSIM(playBlind=False,playPaused=False,evalTime=evolver.eval_time,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
+		sim = PYROSIM(playBlind=False,playPaused=False,evalTime=EVAL_TIME,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
 		N = len(robot_list)
 		if N>5:
 			N=5
@@ -203,7 +204,7 @@ def Show(best,N_SHOWS=3):
 
 def Sample_Run():
 	import robots
-	import numpy as np
+	
 	pop_size = 10
 	generator_fcn = robots.Quadruped
 	fitness_fcn = Max_Y

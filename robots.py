@@ -190,7 +190,9 @@ class Treebot(Robot):
 	def __init__(self, num_children=2,max_depth=2, branch_length=1):
 		super(Treebot,self).__init__()
 
-		t = Tree(num_children=num_children,current_depth=0,max_depth=max_depth,base_position=[0,0,0],lo_angle=-90,hi_angle=90,parent_angle=0,node_ID=0)
+		t = Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
+			branch_length=branch_length,
+			base_position=[0,0,0.5],lo_angle=-math.pi/4,hi_angle=math.pi/4,global_angle=0,node_ID=0)
 
 		parts_list = t.Get_Parts()
 
@@ -226,7 +228,7 @@ if __name__ == "__main__":
 	import numpy as np
 
 	T = 500
-	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
+	sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
 	objID = 0
 	jointID = 0
 	sensorID = 0
