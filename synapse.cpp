@@ -19,9 +19,12 @@ SYNAPSE::SYNAPSE(void) {
 
 	std::cin >> end_time;
 
+
 	weight = start_weight;
+	weight_incr = 0.f;
+	
 	if (end_time-start_time<= 0){
-		weight_incr = 0;
+		weight_incr = 0.f;
 	}
 	else{
 		weight_incr = (end_weight-start_weight)/double(end_time-start_time);

@@ -21,7 +21,7 @@ class Evolver(object):
 		self.max_generations = max_generations
 		self.development_layers = development_layers
 
-		for i in range(self.max_population_size*2):
+		for i in range(self.max_population_size):
 			self.Add_Random_Individual()
 
 
@@ -45,20 +45,37 @@ class Evolver(object):
 		self.nextID += 1
 		self.population.append(indv)
  
-	def Send_Population_To_Simulator(self):
+ 	def Send_Population_To_Simulator(self):
+ 		start_index_found = False
+ 		start_index = 0
+ 		i = 0
+ 		while not start_index_found:
+ 			if self.population[i]['evaluated'] == False:
+ 				start_index = i
+ 				start_index_found = True
+ 			i += 1
+ 		return self.Send_Sub_Population_To_Simulator(start_index)
+
+ 	def Send_Entire_Population_To_Simulator(self):
+ 		return self.Send_Sub_Population_To_Simulator(start_index=0)
+
+	def Send_Sub_Population_To_Simulator(self,start_index):
 		sensor_data = {}
 
-		for offset in range(0,len(self.population),NUM_IN_PARALLEL):
+		for offset in range(start_index,len(self.population),NUM_IN_PARALLEL):
+
 			sims = [0]*NUM_IN_PARALLEL
 			for i in range(NUM_IN_PARALLEL):
-				sims[i] = PYROSIM(playBlind=True, evalTime = self.eval_time)
-				indv_to_send = self.population[i+offset]['genome']
-				indv_to_send.Send_To_Simulator(sims[i],eval_time=self.eval_time)
-				sims[i].Start()
+				if i+offset<len(self.population):
+					sims[i] = PYROSIM(playBlind=True, evalTime = self.eval_time)
+					indv_to_send = self.population[i+offset]['genome']
+					indv_to_send.Send_To_Simulator(sims[i],eval_time=self.eval_time)
+					sims[i].Start()
 			
 			for i in range(NUM_IN_PARALLEL):
-				sims[i].Wait_To_Finish()
-				sensor_data[i+offset] = sims[i].Get_Results()
+				if i+offset<len(self.population):
+					sims[i].Wait_To_Finish()
+					sensor_data[i+offset] = sims[i].Get_Results()
 
 		return sensor_data
 
@@ -69,9 +86,11 @@ class Evolver(object):
 		sensor_data = self.Send_Population_To_Simulator()
 		for i in sensor_data:
 			self.population[i]['fitness'] = self.fitness_fcn(sensor_data[i])
+			self.population[i]['evaluated'] = True
 		
-	def Mutate_And_Copy_Individual(self,index):
-		return self.population[i].Mutate_And_Copy_Individual()	
+	def Mutate_And_Copy_Genome(self,index):
+		mutant = self.population[index]['genome'].Copy_And_Mutate()
+		return mutant
 
 	def Remove_Individual(self,index):
 		del sel.population[index]
@@ -82,19 +101,24 @@ class AFPO(Evolver):
 		super(AFPO,self).__init__(*args,**kwargs)
 		
 
+
 	def Add_Random_Individual(self):
 		super(AFPO,self).Add_Random_Individual()
 		self.population[-1]['age'] = 0
+		self.population[-1]['num_dominated_by'] = 0
 		self.population[-1]['is_dominated'] = False
 
 	def Add_Individual(self,genome,age):
 		super(AFPO,self).Add_Individual(genome)
 		self.population[-1]['age'] = age
+		self.population[-1]['num_dominated_by'] = 0
 		self.population[-1]['is_dominated'] = False
+
 
 	def Age_Population(self):
 		for g in self.population:
 			g['age'] += 1
+
 	def Cull_Dominated(self):
 		pop_length = len(self.population)
 		for i in range(pop_length-1,-1,-1):
@@ -134,6 +158,7 @@ class AFPO(Evolver):
 		return best
 
 	def Evolve_For_One_Generation(self):
+
 		self.Evaluate_Population()
 
 		self.Determine_If_Dominated()
@@ -141,10 +166,10 @@ class AFPO(Evolver):
 		self.Cull_Dominated()
 
 		self.Sort_Population()
+
 		num_survivors = len(self.population)
 
 		print self.generation, self.population[0]['fitness'], self.population[0]['age'],num_survivors
- 		
 
 		self.Age_Population()
 
@@ -163,7 +188,8 @@ class AFPO(Evolver):
 		num_survivors = len(self.population)
 		for i in range(num_survivors,self.max_population_size-1):
 			r = random.randint(0,num_survivors-1)
-			mutant = self.population[r]['genome'].Copy_And_Mutate()
+			#mutant = self.population[r]['genome'].Copy_And_Mutate()
+			mutant = self.Mutate_And_Copy_Genome(r)
 			age = self.population[r]['age']
 			self.Add_Individual(mutant, age)
 
@@ -211,8 +237,6 @@ def Sample_Run():
 	gens = 10
 	
 	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=1,max_generations=gens)
-	evolver.Evaluate_Population()
-	evolver.Determine_If_Dominated()
 	
 	best = evolver.Evolve()
 	print len(best)

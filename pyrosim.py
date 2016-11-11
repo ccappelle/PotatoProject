@@ -232,7 +232,7 @@ class PYROSIM:
                 self.Send(outputString)
 
         def Send_Synapse(self, sourceNeuronIndex = 0 , targetNeuronIndex = 1 , weight = 0.0 ):
-	        self.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,start_weight=weight,end_weight=weight,start_time=0,end_time=0)
+	        self.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,start_weight=weight,end_weight=weight,start_time=0,end_time=-1)
 	
         def Send_Changing_Synapse(self, sourceNeuronIndex=0, targetNeuronIndex=1, start_weight=0.0,end_weight=0.0,start_time=0,end_time=0):
                 outputString = 'Synapse'
