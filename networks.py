@@ -60,7 +60,54 @@ class Network(object):
 					sim.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,
 											start_weight=start_weight, end_weight=end_weight,
 											start_time=start_time,end_time=end_time)
-		
+	def Get_Adj_Matrix(self):
+		return self.adj_matrix
+
+	def Mutate_One_Synapse(self,fromID,toID,development_layer=0,sigma=-1):
+		if development_layer == 0 or development_layer == 1:
+			if sigma<=0:
+				sigma = self.adj_matrix[fromID,toID,development_layer]
+				if sigma<0.05:
+					sigma = 0.05
+
+			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
+				self.adj_matrix[fromID,toID,development_layer] = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
+
+		else:
+			if sigma<=0:
+				sigma = .5
+
+			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
+				new_value = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
+				if new_value>1:
+					new_value == 1
+				elif new_value<-1:
+					new_value == -1
+
+				self.adj_matrix[fromID,toID,development_layer] = new_value
+				
+	def Mutate_p(self,p=-1,sigma=-1):
+		if p<0:
+			p= 1./float(self.total_weights)
+
+		weights = np.nonzero(self.adj_matrix)
+
+		for i in range(self.total_weights):
+			if random.random()<p:
+				fromID,toID,development_layer = weights[0][i],weights[1][i],weights[2][i]
+				self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
+
+	def Mutate_n(self,n,sigma=-1):
+		weights = np.nonzero(self.adj_matrix)
+		#rands = np.random.permutation(self.total_weights)
+		vals_to_choose = range(self.total_weights)
+
+		for i in range(int(n)):
+			rand = random.randrange(len(vals_to_choose))
+			index = vals_to_choose.pop(rand)
+			fromID, toID, development_layer = weights[0][index], weights[1][index], weights[2][index]
+			self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
+
 class LayeredNetwork(Network):
 
 	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,development_layers=1):
@@ -102,63 +149,19 @@ class LayeredNetwork(Network):
 				neuronID+=1	
 
 		if hidden_recurrence == 1: #If recurrent in hidden neurons add recurrent connections
-			for neuron_ID in range(num_sensors,num_sensors+num_layers*hidden_per_layer):
-				self.adj_matrix[neuron_ID,neuron_ID,d_index] = rand_mat[neuron_ID,neuron_ID,d_index]
+			for neuron_ID in range(self.num_sensors,self.num_sensors+self.num_layers*self.hidden_per_layer):
+				self.adj_matrix[neuron_ID,neuron_ID,d_index] = random.uniform(LO_INIT,HI_INIT)
 
 		if motor_recurrence == 1: #If recurrent in motor neurons add recurrent connections
-			for neuron_ID in range(num_sensors+num_layers*hidden_per_layer, total_neurons):
-				self.adj_matrix[neuron_ID,neuron_ID,d_index] = rand_mat[neuron_ID,neuron_ID,d_index]
+			for neuron_ID in range(self.num_sensors+self.num_layers*self.hidden_per_layer, self.total_neurons):
+				self.adj_matrix[neuron_ID,neuron_ID,d_index] = random.uniform(LO_INIT,HI_INIT)
 
 		self.total_weights = np.count_nonzero(self.adj_matrix)
 		self.total_synapses = self.total_weights/self.development_layers
 
-	def Get_Adj_Matrix(self):
-		return self.adj_matrix
 
-	def Mutate_One_Synapse(self,fromID,toID,development_layer=0,sigma=-1):
-		if development_layer == 0 or development_layer == 1:
-			if sigma<=0:
-				sigma = self.adj_matrix[fromID,toID,development_layer]
-				if sigma<0.05:
-					sigma = 0.05
 
-			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				self.adj_matrix[fromID,toID,development_layer] = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
 
-		else:
-			if sigma<=0:
-				sigma = .5
-
-			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				new_value = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
-				if new_value>1:
-					new_value == 1
-				elif new_value<-1:
-					new_value == -1
-
-				self.adj_matrix[fromID,toID,development_layer] = new_value
-
-	def Mutate_p(self,p=-1,sigma=-1):
-		if p<0:
-			p= 1./float(self.total_weights)
-
-		weights = np.nonzero(self.adj_matrix)
-
-		for i in range(self.total_weights):
-			if random.random()<p:
-				fromID,toID,development_layer = weights[0][i],weights[1][i],weights[2][i]
-				self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
-
-	def Mutate_n(self,n,sigma=-1):
-		weights = np.nonzero(self.adj_matrix)
-		#rands = np.random.permutation(self.total_weights)
-		vals_to_choose = range(self.total_weights)
-
-		for i in range(int(n)):
-			rand = random.randrange(len(vals_to_choose))
-			index = vals_to_choose.pop(rand)
-			fromID, toID, development_layer = weights[0][index], weights[1][index], weights[2][index]
-			self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
 
 class TreeNetwork(Network):
 	def __init__(self, leaf_tips,num_motors, num_hidden, lineage):

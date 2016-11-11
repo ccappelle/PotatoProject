@@ -30,6 +30,7 @@ int numberOfBodies = 0;
 static dGeomID ground;
 static float xyz[3] = {0.8317f,-0.9817f,0.8000f};
 static float hpr[3] = {121.0000f,-27.5000f,0.0000f};
+const float GRAVITY = 2.0f;
 
 void Draw_Distance_Sensor(dGeomID myGeom, dGeomID hisGeom);
 
@@ -155,7 +156,7 @@ void Simulate_For_One_Time_Step(void) {
 
 	environment->Actuate_Joints();
 
-        dWorldStep (world,0.05);
+        dWorldStep (world,0.075);
 
         dJointGroupEmpty(contactgroup);
 
@@ -189,7 +190,7 @@ void Initialize_ODE(void) {
   	world = dWorldCreate();
   	space = dHashSpaceCreate (0);
   	contactgroup = dJointGroupCreate (0);
-  	dWorldSetGravity (world,0,0,-10.0);
+  	dWorldSetGravity (world,0,0,-GRAVITY);
   	ground = dCreatePlane (space,0,0,1,0);
  
 	dGeomSetData(ground,NULL); 

@@ -11,7 +11,7 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
-MOTOR_SPEED = .5
+MOTOR_SPEED = .8
 
 class Robot(object):
 	def __init__(self):
@@ -144,8 +144,12 @@ class NPed(Robot):
 
 	def Add_Random_Network(self):
 		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,hidden_per_layer=self.num_legs*2,num_motors=self.num_legs*2)
-		self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=2,hidden_per_layer=self.num_legs*2,
-												development_layers=self.development_layers)
+		
+		self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=1,num_motors=self.num_legs*2, 
+												development_layers=self.development_layers, back_connections=1,motor_recurrence=0,hidden_recurrence=1)
+
+		#self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=2,hidden_per_layer=self.num_legs*2,
+		#										development_layers=self.development_layers)
 	
 
 	def Send_To_Simulator(self,sim, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True,eval_time=500):

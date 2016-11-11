@@ -3,7 +3,7 @@ from operator import itemgetter
 import random
 import numpy as np
 
-EVAL_TIME = 500
+EVAL_TIME = 1000
 MAX_GENERATIONS = 300
 NUM_IN_PARALLEL = 10
 class Evolver(object):
@@ -99,7 +99,6 @@ class Evolver(object):
 class AFPO(Evolver):
 	def __init__(self,*args,**kwargs):
 		super(AFPO,self).__init__(*args,**kwargs)
-		
 
 
 	def Add_Random_Individual(self):
@@ -119,36 +118,61 @@ class AFPO(Evolver):
 		for g in self.population:
 			g['age'] += 1
 
-	def Cull_Dominated(self):
+	def Cull_All_Dominated(self):
 		pop_length = len(self.population)
 		for i in range(pop_length-1,-1,-1):
 			if self.population[i]['is_dominated']:
 				del self.population[i]
 
-
-	def Determine_If_Dominated(self):
+	def Cull_To_Pop_Size(self):
+		#Assumes population is sorted by fitness and num-dominated appropiately
+		start_index = len(self.population)
+		for i in range(start_index-1,self.max_population_size-1,-1):
+			del self.population[i]
+		
+	def Count_Dominated_By(self):
 		for i in range(len(self.population)):
 			indv_1 = self.population[i]
-			if not indv_1['is_dominated']:
-				for j in range(len(self.population)):
-					if not self.population[j]['is_dominated'] and not(j==i):
-						indv_2 = self.population[j]
+			for j in range(i+1,len(self.population)):	
+				indv_2 = self.population[j]
 
-						indv_1_is_younger = indv_1['age'] < indv_2['age']
-						if self.maximize:
-							indv_1_is_fitter = indv_1['fitness'] > indv_2['fitness']
-						else:
-							indv_1_is_fitter = indv_1['fitness'] < indv_2['fitness']
+				which_dominates = self.Which_Dominates(indv_1,indv_2)
+				if which_dominates == 1:
+					indv_2['num_dominated_by'] += 1
+					indv_2['is_dominated'] = True
+				elif which_dominates == 2:
+					indv_1['num_dominated_by'] += 1
+					indv_1['is_dominated'] = True
 
-						if indv_1['age'] == indv_2['age'] and indv_1['fitness'] == indv_2['fitness']:
-							if indv_1['ID'] < indv_2['ID']:
-								indv_2['is_dominated'] = True
-							else:
-								indv_1['is_dominated'] = True
-						elif indv_1_is_fitter and indv_1_is_younger:
-							indv_2['is_dominated'] = True
-						elif not(indv_1_is_fitter) and not(indv_1_is_younger):
-							indv_1['is_dominated'] = True
+	def Which_Dominates(self,indv_1,indv_2):
+		if self.maximize:
+			indv_1_is_fitter = indv_1['fitness'] > indv_2['fitness']
+		else:
+			indv_1_is_fitter = indv_1['fitness'] < indv_2['fitness']
+
+		if indv_1['age']< indv_2['age']:
+			if indv_1_is_fitter or indv_1['fitness'] == indv_2['fitness']:
+				return 1
+			else:
+				return 0
+		elif indv_1['age'] > indv_2['age']:
+			if not(indv_1_is_fitter) or indv_1['fitness'] == indv_2['fitness']:
+				return 2
+			else:
+				return 0
+		elif indv_1['age'] == indv_2['age']:
+			if indv_1_is_fitter:
+				return 1
+			elif indv_1['fitness'] == indv_2['fitness']:
+				if indv_1['ID'] < indv_2['ID']:
+					return 2
+				else:
+					return 1
+			elif not(indv_1_is_fitter):
+				return 2
+		else:
+			return 0
+
 
 	def Evolve(self):
 		best = {}
@@ -161,19 +185,21 @@ class AFPO(Evolver):
 
 		self.Evaluate_Population()
 
-		self.Determine_If_Dominated()
-
-		self.Cull_Dominated()
+		self.Count_Dominated_By()
 
 		self.Sort_Population()
 
-		num_survivors = len(self.population)
 
-		print self.generation, self.population[0]['fitness'], self.population[0]['age'],num_survivors
+		self.Cull_To_Pop_Size()
+
+		pareto_front = self.Get_Pareto_Front()
+
+		print self.generation, self.population[0]['fitness'], self.population[0]['age'],pareto_front,len(self.population)
 
 		self.Age_Population()
 
-		self.Fill_Population()
+		#self.Fill_Population()
+		self.Fill_Population_To_Double()
 
 		self.Add_Random_Individual()
 
@@ -181,8 +207,16 @@ class AFPO(Evolver):
  		
 		self.generation += 1
 
-		return self.population[0:num_survivors]
+		return self.population[0:pareto_front]
 
+	def Get_Pareto_Front(self):
+		index = 0
+
+		for index in range(len(self.population)):
+			if self.population[index]['is_dominated'] == True:
+				return index
+
+		return len(self.population)-1
 
 	def Fill_Population(self):
 		num_survivors = len(self.population)
@@ -193,13 +227,21 @@ class AFPO(Evolver):
 			age = self.population[r]['age']
 			self.Add_Individual(mutant, age)
 
+	def Fill_Population_To_Double(self):
+		for i in range(len(self.population)):
+			mutant = self.Mutate_And_Copy_Genome(i)
+			age = self.population[i]['age']
+			self.Add_Individual(mutant,age)
+
+
 	def Make_All_Non_Dominated(self):
 		for p in self.population:
 			p['is_dominated'] = False
+			p['num_dominated_by'] = 0
 
-	def Sort_Population(self):
-		self.population.sort(key=itemgetter('is_dominated') ,reverse=self.maximize)
+	def Sort_Population(self):		
 		super(AFPO,self).Sort_Population()
+		self.population.sort(key=itemgetter('num_dominated_by'))
 		
 
 
@@ -213,8 +255,10 @@ def Max_Y(sensor_data):
 	return sensor_data[POS_SENSOR,1,EVAL_TIME-1]
 
 def Show(best,N_SHOWS=3):
+	indices = np.linspace(0,len(best)-1,num=N_SHOWS)
 
-	for i in range(0,len(best),len(best)/N_SHOWS):
+	for i in indices:
+		i = int(i)
 		robot_list = best[i]
 		IDs = [0,0,0,0]
 		sim = PYROSIM(playBlind=False,playPaused=False,evalTime=EVAL_TIME,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
@@ -234,7 +278,7 @@ def Sample_Run():
 	pop_size = 10
 	generator_fcn = robots.Quadruped
 	fitness_fcn = Max_Y
-	gens = 10
+	gens = 100
 	
 	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=1,max_generations=gens)
 	
