@@ -21,7 +21,7 @@
 \newcommand{\ind}{\  \rotatebox{90}{\vDash} \ }
 \setlength{\headheight}{26pt}
 
-\newlist{todolist}{itemize}{3}
+\newlist{todolist}{itemize}{5}
 \setlist[todolist]{label=$\square$}
 \usepackage{pifont}
 \newcommand{\cmark}{\ding{51}}%
@@ -39,13 +39,11 @@
 			\item[\done] N-Ped body
 			\item Biped
 			\item Other Robots
-			\item Robot super class
+			\item[\done] Robot super class
 		\end{todolist}
-	\item Evolver Module
+	\item[\done] Evolver Module
 		\begin{todolist}
-			\item[\done] Hillclimber
-			\item AFPO
-			\item ES bs
+			\item[\done] AFPO
 		\end{todolist}
 	\item Networks Module
 		\begin{todolist}
@@ -57,12 +55,17 @@
 	\item Boring things
 		\begin{todolist}
 			\item[\done] Use Github
-			\item Move pyrosim to own folder
+			\item[\wontfix] Move pyrosim to own folder
 			\item Formalize experimental design
 			\item Write Paper
 			\begin{todolist}
 				\item Lit Review
 				\item Do Experiments
+				\begin{todolist}
+					\item Control with direct encoding
+					\item 4-layer Devo with direct encoding
+					\item 3-layer Devo with direct encoding
+				\end{todolist}
 			\end{todolist}
 		\end{todolist}
 \end{todolist}
