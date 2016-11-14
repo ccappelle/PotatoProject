@@ -4,7 +4,7 @@ import simObjects
 from pyrosim import PYROSIM
 import copy
 import math
-
+from tree import Tree
 
 CREATE_NETWORK = -1
 BOX = 0
@@ -55,6 +55,9 @@ class Robot(object):
 		sensor = simObjects.TouchSensor(**kwargs)
 		self.sensors.append(sensor)
 
+	def Add_Ray_Sensor(self, **kwargs):
+		sensor = simObjects.RaySensor(**kwargs)
+		self.sensors.append(sensor)
 	def Add_Position_Sensor(self,**kwargs):
 		sensor = simObjects.PositionSensor(**kwargs)
 		self.sensors.append(sensor)
@@ -191,29 +194,66 @@ class Quadruped(NPed):
 
 
 class Treebot(Robot):
-	def __init__(self, num_children=2,max_depth=2, branch_length=1):
+	def __init__(self, num_children=2,max_depth=1, branch_length=1,color=(1,0,0)):
 		super(Treebot,self).__init__()
 
-		t = Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
+		self.branch_length = branch_length
+		self.radius = branch_length/10.
+		self.color = color
+		self.r,self.g,self.b = color
+		self.tree = Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
 			branch_length=branch_length,
 			base_position=[0,0,0.5],lo_angle=-math.pi/4,hi_angle=math.pi/4,global_angle=0,node_ID=0)
 
-		parts_list = t.Get_Parts()
+		self.ray_sensor_ID = 0
 
-		for i in range(len(parts_list)):
-			part = parts_list[i]
+		self.Init_Parts(self.tree)
+
+	def Init_Parts(self,tree):
+		pos = tree.Get_Center()
+		orientation = tree.Get_Orientation()
+		node_ID = tree.node_ID
+		parent_ID = tree.parent_ID
+
+		
+		self.Add_Cylinder(ID=node_ID,x=pos[0],y=pos[1],z=pos[2],
+					r1=orientation[0],r2=orientation[1],r3=orientation[2],
+					length=self.branch_length,
+					radius=self.radius,r=self.r,g=self.g,b=self.b)
 
 
 
+		self.Add_Hinge_Joint(ID=node_ID,firstObjectID=node_ID,secondObjectID=parent_ID,
+			x=tree.tip_position[0],y=tree.tip_position[1],
+			z=tree.tip_position[1],n1=0,n2=0,n3=1,
+			speed=MOTOR_SPEED)
 
+		if tree.is_leaf:
+			self.Add_Ray_Sensor(ID=self.ray_sensor_ID, object_ID=node_ID, x=pos[0],y=pos[1],z=pos[2],
+									r1=orientation[0],r2=orientation[1],r3=orientation[2])
+			self.ray_sensor_ID += 1
+		else:
+			for child in tree.children:
+				self.Init_Parts(child)
 
+def _Test_Tree(sim):
+	t = Treebot()
+	t.Send_To_Simulator(sim)
+	sim.Start()
+	sim.Wait_To_Finish()
+	data = sim.Get_Results()
+	print data
 
+	for val in data:
+		print val, data[val]
 def _Test_Mutate_Quad(sim):
 	quad = Quadruped(color=[0.4,0.4,1.0])
 	IDs = quad.Send_To_Simulator(sim)
 	newQuad = quad.Copy_And_Mutate(variable=.99,sigma=5)
 	newQuad.Send_To_Simulator(sim, objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
 	sim.Start()
+
+
 def _Test_Robot_Army(sim):
 	import numpy as np
 	N = 5
@@ -231,8 +271,8 @@ if __name__ == "__main__":
 	
 	import numpy as np
 
-	T = 500
-	sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
+	T = 200
+	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
 	objID = 0
 	jointID = 0
 	sensorID = 0
@@ -243,5 +283,6 @@ if __name__ == "__main__":
 	incr = 1.5
 	index = 0
 	#Robot_Army(sim)
-	_Test_Mutate_Quad(sim)
+	#_Test_Mutate_Quad(sim)
+	_Test_Tree(sim)
 

@@ -3,9 +3,7 @@ import copy
 
 class Tree(object):
 	def __init__(self,num_children=2,current_depth=0,max_depth=2,base_position=[0,0,0],
-					branch_length=1,global_angle=0,lo_angle=-math.pi/4,hi_angle= math.pi/4,node_ID=0,parent_ID=None):
-
-		print node_ID, num_children
+					branch_length=1,global_angle=0,lo_angle=-math.pi/4,hi_angle= math.pi/4,node_ID=0,parent_ID=-1):
 
 		self.node_ID = node_ID
 		self.parent_ID = parent_ID
@@ -14,9 +12,9 @@ class Tree(object):
 
 		self.base_position = base_position
 		self.tip_position = [0]*3
-		self.tip_position[0] = base_position[0] +  self.branch_length*math.cos(global_angle)
+		self.tip_position[0] = base_position[0] +  self.branch_length*math.sin(global_angle)
 
-		self.tip_position[1] = base_position[1] +  self.branch_length*math.sin(global_angle)
+		self.tip_position[1] = base_position[1] +  self.branch_length*math.cos(global_angle)
 		self.tip_position[2] = base_position[2]
 
 
@@ -24,7 +22,6 @@ class Tree(object):
 		self.max_depth = max_depth
 
 		self.angle = global_angle
-
 
 		self.is_leaf = False
 		if self.depth == max_depth:
@@ -55,12 +52,13 @@ class Tree(object):
 				self.highest_child_ID = self.children[-1].highest_child_ID
 
 
+
 	def Plot_Tree(self,ax):
-		plt.plot([self.tip_position[0],self.base_position[0]],[self.tip_position[1],self.base_position[1]])
+		plt.plot([self.tip_position[1],self.base_position[1]],[self.tip_position[0],self.base_position[0]])
 		center = self.Get_Center()
-		ax.text(center[0],center[1],str(self.node_ID))
+		ax.text(center[1],center[0],str(self.node_ID))
 		for c in self.children:
-			c.Plot_Tree(plt)
+			c.Plot_Tree(ax)
 
 	def Get_Center(self):
 		center = [0]*3
@@ -68,6 +66,11 @@ class Tree(object):
 			center[i] = (self.base_position[i]+self.tip_position[i])/2.0
 		return center
 
+	def Get_Orientation(self):
+		orientation = [0]*3
+		for i in range(3):
+			orientation[i] = self.tip_position[i]-self.base_position[i]
+		return orientation
 
 if __name__ == "__main__":
 	import matplotlib.pyplot as plt

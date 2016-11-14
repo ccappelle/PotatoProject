@@ -138,6 +138,31 @@ class TouchSensor(Sensor):
 		kwargs = self.Get_kwargs(ID_offset,object_ID_offset)
 		sim.Send_Touch_Sensor(**kwargs)
 
+class RaySensor(Sensor):
+	def __init__(self,ID=0,object_ID=0,x=0,y=0,z=0,r1=1,r2=0,r3=0):
+		super(RaySensor,self).__init__(ID=ID,object_ID=object_ID)
+		self.x= x
+		self.y= y
+		self.z = z
+		self.r1 = r1
+		self.r2 = r2
+		self.r3 = r3
+
+	def Get_kwargs(self,ID_offset=0,object_ID_offset=0,x_offset=0,y_offset=0,z_offset=0):
+		kwargs = super(RaySensor,self).Get_kwargs(ID_offset,object_ID_offset)
+
+		kwargs['x'] = self.x+x_offset
+		kwargs['y'] = self.y+y_offset
+		kwargs['z'] = self.z+z_offset
+		kwargs['r1'] = self.r1
+		kwargs['r2'] = self.r2
+		kwargs['r3'] = self.r3
+		return kwargs
+
+	def Send_To_Simulator(self,sim,ID_offset=0,object_ID_offset=0,x_offset=0,y_offset=0,z_offset=0):
+		kwargs = self.Get_kwargs(ID_offset,object_ID_offset,x_offset,y_offset,z_offset)
+		sim.Send_Ray_Sensor(**kwargs)
+
 
 if __name__ == '__main__':
 	from pyrosim import PYROSIM
