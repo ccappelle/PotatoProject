@@ -33,7 +33,7 @@ class Cylinder(Shape):
 	def Send_To_Simulator(self,sim,x_offset=0,y_offset=0,z_offset=0,ID_offset=0):
 		kwargs = self.Get_kwargs(x_offset=x_offset,y_offset=y_offset,z_offset=z_offset,ID_offset=ID_offset)
 		sim.Send_Cylinder(**kwargs)
-
+		print 'sent cylinder', kwargs
 	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_offset=0):
 		kwargs = super(Cylinder,self).Get_kwargs(x_offset,y_offset,z_offset,ID_offset)
 		kwargs['r1'] = self.r1
@@ -97,7 +97,7 @@ class HingeJoint(Joint):
 	def Send_To_Simulator(self,sim,x_offset=0,y_offset=0,z_offset=0,object_ID_offset=0,ID_offset=0):
 		kwargs = self.Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
 		sim.Send_Joint(**kwargs)
-
+		print 'sent joint', kwargs
 	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_offset=0,object_ID_offset=0):
 		kwargs = super(HingeJoint,self).Get_kwargs(x_offset,y_offset,z_offset,ID_offset,object_ID_offset)
 		if self.secondObjectID < 0:

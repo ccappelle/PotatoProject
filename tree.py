@@ -2,7 +2,7 @@ import math
 import copy
 
 class Tree(object):
-	def __init__(self,num_children=2,current_depth=0,max_depth=2,base_position=[0,0,0],
+	def __init__(self,num_children=2,current_depth=0,max_depth=1,base_position=[0,0,0],
 					branch_length=1,global_angle=0,lo_angle=-math.pi/4,hi_angle= math.pi/4,node_ID=0,parent_ID=-1):
 
 		self.node_ID = node_ID
@@ -22,13 +22,21 @@ class Tree(object):
 		self.max_depth = max_depth
 
 		self.angle = global_angle
-
+		self.lo_angle = lo_angle
+		self.hi_angle = hi_angle
+		
 		self.is_leaf = False
 		if self.depth == max_depth:
 			self.is_leaf = True
 			self.children = []
 			self.num_children = 0
+			self.num_leaves = 1
+			self.num_nodes = 1
+			self.leaf_list = [self.node_ID]
 		else:
+			self.leaf_list = []
+			self.num_leaves = 0
+			self.num_nodes = 1
 			if isinstance(num_children,int):
 				self.num_children = num_children
 				self.lineage = num_children
@@ -48,9 +56,15 @@ class Tree(object):
 					max_depth=self.max_depth, base_position=self.tip_position, branch_length=self.branch_length,
 					global_angle=child_angle,lo_angle=lo_angle/2.0,hi_angle=hi_angle/2.0, 
 					node_ID=child_ID,parent_ID=self.node_ID)
+				self.num_leaves += child.num_leaves
+				self.highest_child_ID = child.highest_child_ID
+				self.num_nodes += child.num_nodes
+				
+				for leaf_ID in child.leaf_list:
+					self.leaf_list.append(leaf_ID)
 				self.children.append(child)
-				self.highest_child_ID = self.children[-1].highest_child_ID
-
+				
+				
 
 
 	def Plot_Tree(self,ax):
@@ -83,6 +97,7 @@ if __name__ == "__main__":
 		branch_length=branch_length,
 		base_position=[0,0,0.5],lo_angle=-math.pi/4.,hi_angle=math.pi/4.,global_angle=math.pi/2.0,node_ID=0)
 
+	print t.num_leaves,t.num_nodes,t.leaf_list
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	t.Plot_Tree(ax)

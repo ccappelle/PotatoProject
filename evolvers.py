@@ -2,10 +2,11 @@ from pyrosim import PYROSIM
 from operator import itemgetter
 import random
 import numpy as np
+import copy
 
 EVAL_TIME = 1000
 MAX_GENERATIONS = 300
-NUM_IN_PARALLEL = 10
+NUM_IN_PARALLEL = 5
 class Evolver(object):
 	def __init__(self,max_population_size,generator_fcn,fitness_fcn={},max_generations=MAX_GENERATIONS,eval_time=EVAL_TIME,maximize=True,
 					development_layers = 1):
@@ -61,7 +62,7 @@ class Evolver(object):
 
 	def Send_Sub_Population_To_Simulator(self,start_index):
 		sensor_data = {}
-
+		ID = 0
 		for offset in range(start_index,len(self.population),NUM_IN_PARALLEL):
 
 			sims = [0]*NUM_IN_PARALLEL
@@ -75,6 +76,7 @@ class Evolver(object):
 			for i in range(NUM_IN_PARALLEL):
 				if i+offset<len(self.population):
 					sims[i].Wait_To_Finish()
+					ID = self.population[i+offset]['ID']
 					sensor_data[i+offset] = sims[i].Get_Results()
 
 		return sensor_data
@@ -84,13 +86,15 @@ class Evolver(object):
 
 	def Evaluate_Population(self):
 		sensor_data = self.Send_Population_To_Simulator()
-		for i in sensor_data:
-			self.population[i]['fitness'] = self.fitness_fcn(sensor_data[i])
-			self.population[i]['evaluated'] = True
+		#sensor_data = self.Send_Entire_Population_To_Simulator()
+		for index in sensor_data:
+			
+			self.population[index]['fitness'] = self.fitness_fcn(sensor_data[index])
+			self.population[index]['evaluated'] = True
 		
 	def Mutate_And_Copy_Genome(self,index):
-		mutant = self.population[index]['genome'].Copy_And_Mutate()
-		return mutant
+		mutant_genome = self.population[index]['genome'].Copy_And_Mutate()
+		return mutant_genome
 
 	def Remove_Individual(self,index):
 		del sel.population[index]
@@ -103,9 +107,10 @@ class AFPO(Evolver):
 
 	def Add_Random_Individual(self):
 		super(AFPO,self).Add_Random_Individual()
-		self.population[-1]['age'] = 0
-		self.population[-1]['num_dominated_by'] = 0
-		self.population[-1]['is_dominated'] = False
+		indv = self.population[-1]
+		indv['age'] = 0
+		indv['num_dominated_by'] = 0
+		indv['is_dominated'] = False
 
 	def Add_Individual(self,genome,age):
 		super(AFPO,self).Add_Individual(genome)
@@ -126,9 +131,11 @@ class AFPO(Evolver):
 
 	def Cull_To_Pop_Size(self):
 		#Assumes population is sorted by fitness and num-dominated appropiately
-		start_index = len(self.population)
-		for i in range(start_index-1,self.max_population_size-1,-1):
-			del self.population[i]
+		index = len(self.population)-1
+		while len(self.population)> self.max_population_size:
+			del(self.population[index])
+			index -= 1
+
 		
 	def Count_Dominated_By(self):
 		for i in range(len(self.population)):
@@ -192,9 +199,16 @@ class AFPO(Evolver):
 
 		self.Cull_To_Pop_Size()
 
-		pareto_front = self.Get_Pareto_Front()
+		pareto_front_size = self.Get_Pareto_Front()
+		fit_list = [0]*pareto_front_size
+		id_list = [0]*pareto_front_size
 
-		print self.generation, self.population[0]['fitness'], self.population[0]['age'],pareto_front,len(self.population)
+		for i in range(len(fit_list)):
+			fit_list[i] = self.population[i]['fitness']
+			id_list[i] = self.population[i]['ID']
+
+		pareto_front = self.population[0:pareto_front_size]
+		print self.generation, fit_list, pareto_front_size
 
 		self.Age_Population()
 
@@ -207,7 +221,7 @@ class AFPO(Evolver):
  		
 		self.generation += 1
 
-		return self.population[0:pareto_front]
+		return pareto_front
 
 	def Get_Pareto_Front(self):
 		index = 0
@@ -222,8 +236,8 @@ class AFPO(Evolver):
 		num_survivors = len(self.population)
 		for i in range(num_survivors,self.max_population_size-1):
 			r = random.randint(0,num_survivors-1)
-			#mutant = self.population[r]['genome'].Copy_And_Mutate()
-			mutant = self.Mutate_And_Copy_Genome(r)
+			mutant = self.population[r]['genome'].Copy_And_Mutate()
+			#mutant = self.Mutate_And_Copy_Genome(r)
 			age = self.population[r]['age']
 			self.Add_Individual(mutant, age)
 
@@ -243,6 +257,10 @@ class AFPO(Evolver):
 		super(AFPO,self).Sort_Population()
 		self.population.sort(key=itemgetter('num_dominated_by'))
 		
+		id_list = [0]*len(self.population)
+		for i in range(len(self.population)):
+			id_list[i] =  self.population[i]['ID']
+
 
 
 def Max_XY(sensor_data):
@@ -254,7 +272,7 @@ def Max_Y(sensor_data):
 	Y_DIR = 1
 	return sensor_data[POS_SENSOR,1,EVAL_TIME-1]
 
-def Show(best,N_SHOWS=3):
+def Show(evolver,best,N_SHOWS=3):
 	indices = np.linspace(0,len(best)-1,num=N_SHOWS)
 
 	for i in indices:
@@ -268,23 +286,40 @@ def Show(best,N_SHOWS=3):
 		xVec = np.linspace(-N/2,N/2,num=N)
 		for i in range(N):
 			robot = robot_list[i]
-			IDs = robot['genome'].Send_To_Simulator(sim,x_offset=xVec[i], objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
+			print i, robot['fitness'], robot['ID']
+			IDs = robot['genome'].Send_To_Simulator(sim, x_offset=xVec[i],eval_time=evolver.eval_time,objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
 		sim.Start()
 		sim.Wait_To_Finish()
+		print 'compared to'
+		data = sim.Get_Results()
+		i = 0
+		for ids in range(4,IDs[2],5):
+			print i, data[ids,1,EVAL_TIME-1]
+			i += 1
+		print '*************'
 
 def Sample_Run():
 	import robots
 	
-	pop_size = 10
+	pop_size = 50
 	generator_fcn = robots.Quadruped
 	fitness_fcn = Max_Y
 	gens = 100
 	
-	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=1,max_generations=gens)
+	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=4,max_generations=gens)
 	
 	best = evolver.Evolve()
-	print len(best)
-	Show(best)
+	# print len(best)
+	# for indv in best:
+	# 	print indv['ID'], indv['fitness']
+	# sim = PYROSIM(playBlind=False, playPaused=False,evalTime=evolver.eval_time,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
+	# robot = best[-1]
+
+	# robot['genome'].Send_To_Simulator(sim,eval_time=evolver.eval_time)
+	# sim.Start()
+	# sim.Wait_To_Finish()
+	# data = sim.Get_Results()
+	Show(evolver,best)
 
 if __name__ == "__main__":
 	Sample_Run()

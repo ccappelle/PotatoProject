@@ -15,12 +15,17 @@ class Network(object):
 	def Send_To_Simulator(self,sim,sensor_indices=-1,motor_indices=-1,neuron_offset=0,sensor_offset=0,joint_offset=0,eval_time=500):
 		if sensor_indices < 0:
 			sensor_indices = range(self.num_sensors)
+		elif not isinstance(sensor_indices,list):
+			sensor_indices = [sensor_indices]
 
 		if motor_indices < 0:
 			motor_indices = range(self.num_motors)
+		elif not isinstance(motor_indices,list):
+			motor_indices = [motor_indices]
 
 		s_offset = neuron_offset
 		for s_ID in range(self.num_sensors):
+			print 'Sending Sensor Neuron:', s_ID+s_offset, sensor_offset+sensor_indices[s_ID]
 			sim.Send_Sensor_Neuron(ID=s_ID+s_offset, sensorID=sensor_offset+sensor_indices[s_ID])
 
 		h_offset = s_offset+self.num_sensors
@@ -110,7 +115,9 @@ class Network(object):
 
 class LayeredNetwork(Network):
 
-	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,development_layers=1):
+	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, 
+				num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,
+				development_layers=1):
 		#Create an layered network with random weights returned as adjacency matrix
 		#Dimensions and structure: num_sensors -> hidden_per_layer_{1} -> ... -> hidden_per_layer_{num_layers} -> num_motors
 		#can add feed back connections between hidden neurons (back_connections=1)
@@ -163,10 +170,11 @@ class LayeredNetwork(Network):
 
 
 
-class TreeNetwork(Network):
-	def __init__(self, leaf_tips,num_motors, num_hidden, lineage):
-		self.synapse_list = []
-		self.neuron_list = []
+class NM_TreeNetwork(LayeredNetwork):
+	def __init__(self, tree, num_layers=2, hidden_per_layer=2):
+		super(NM_TreeNetwork,self).__init__(num_sensors=tree.num_leaves,num_layers=num_layers,hidden_per_layer=hidden_per_layer,num_motors=1)
+		self.tree = tree
+
 
 
 def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
@@ -177,10 +185,14 @@ def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidd
 							motor_recurrence=motor_recurrence)
 
 if __name__ == "__main__":
-	myNet = LayeredNetwork()
+	from tree import Tree
+	#myNet = LayeredNetwork()
 	#Create_Quad_Network()
-	myNet.Mutate_p()
-	
+	#myNet.Mutate_p()
+	t = Tree()
+	myNet = NM_TreeNetwork(t,num_layers=1,hidden_per_layer=1)
+	print myNet.num_sensors,myNet.num_motors
+	print myNet.adj_matrix[:,:,0]
 
 
 	

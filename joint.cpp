@@ -102,6 +102,8 @@ void JOINT::Create_In_Simulator(dWorldID world, OBJECT *firstObject){
 
         dJointAttach( joint, firstObject->Get_Body(), 0);
 
+        dJointSetHingeAnchor(joint,x,y,z);
+
         dJointSetHingeAxis(joint,normalX,normalY,normalZ);
 
         dJointSetHingeParam(joint,dParamLoStop,lowStop);
