@@ -25,7 +25,7 @@ class Network(object):
 
 		s_offset = neuron_offset
 		for s_ID in range(self.num_sensors):
-			print 'Sending Sensor Neuron:', s_ID+s_offset, sensor_offset+sensor_indices[s_ID]
+			#print 'Sending Sensor Neuron:', s_ID+s_offset, sensor_offset+sensor_indices[s_ID]
 			sim.Send_Sensor_Neuron(ID=s_ID+s_offset, sensorID=sensor_offset+sensor_indices[s_ID])
 
 		h_offset = s_offset+self.num_sensors

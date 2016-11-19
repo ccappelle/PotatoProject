@@ -184,8 +184,11 @@ class AFPO(Evolver):
 	def Evolve(self):
 		best = {}
 		for i in range(self.max_generations):
-			best[i] = self.Evolve_For_One_Generation()
-
+			fitness,pareto_front = self.Evolve_For_One_Generation()
+			best[i] = {}
+			best[i]['fitness'] = fitness
+			if i%100 == 0 or i == self.max_generations-1:
+				best[i]['pareto_front'] = pareto_front
 		return best
 
 	def Evolve_For_One_Generation(self):
@@ -208,7 +211,7 @@ class AFPO(Evolver):
 			id_list[i] = self.population[i]['ID']
 
 		pareto_front = self.population[0:pareto_front_size]
-		print self.generation, fit_list, pareto_front_size
+		print self.generation, fit_list, pareto_front_size, self.population[0]['age']
 
 		self.Age_Population()
 
@@ -221,7 +224,7 @@ class AFPO(Evolver):
  		
 		self.generation += 1
 
-		return pareto_front
+		return fit_list[0],pareto_front
 
 	def Get_Pareto_Front(self):
 		index = 0
@@ -272,55 +275,29 @@ def Max_Y(sensor_data):
 	Y_DIR = 1
 	return sensor_data[POS_SENSOR,1,EVAL_TIME-1]
 
-def Show(evolver,best,N_SHOWS=3):
-	indices = np.linspace(0,len(best)-1,num=N_SHOWS)
+def Play_Indv(dumped_data, index=-1):
+	gens = dumped_data['gens']
+	gen_data = dumped_data['data']
+	eval_time = dumped_data['eval_time']
+	print eval_time
+	if index==-1:
+		index = gens-1
 
-	for i in indices:
-		i = int(i)
-		robot_list = best[i]
-		IDs = [0,0,0,0]
-		sim = PYROSIM(playBlind=False,playPaused=False,evalTime=EVAL_TIME,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
-		N = len(robot_list)
-		if N>5:
-			N=5
-		xVec = np.linspace(-N/2,N/2,num=N)
-		for i in range(N):
-			robot = robot_list[i]
-			print i, robot['fitness'], robot['ID']
-			IDs = robot['genome'].Send_To_Simulator(sim, x_offset=xVec[i],eval_time=evolver.eval_time,objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
-		sim.Start()
-		sim.Wait_To_Finish()
-		print 'compared to'
-		data = sim.Get_Results()
-		i = 0
-		for ids in range(4,IDs[2],5):
-			print i, data[ids,1,EVAL_TIME-1]
-			i += 1
-		print '*************'
-
-def Sample_Run():
-	import robots
-	
-	pop_size = 50
-	generator_fcn = robots.Quadruped
-	fitness_fcn = Max_Y
-	gens = 100
-	
-	evolver = AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=4,max_generations=gens)
-	
-	best = evolver.Evolve()
-	# print len(best)
-	# for indv in best:
-	# 	print indv['ID'], indv['fitness']
-	# sim = PYROSIM(playBlind=False, playPaused=False,evalTime=evolver.eval_time,xyz=(0.,-5.,4.),hpr=(90.0,-25.,0.0))
-	# robot = best[-1]
-
-	# robot['genome'].Send_To_Simulator(sim,eval_time=evolver.eval_time)
-	# sim.Start()
-	# sim.Wait_To_Finish()
-	# data = sim.Get_Results()
-	Show(evolver,best)
+	fitness = gen_data[index]['fitness']
+	pareto_front = gen_data[index]['pareto_front']
+	best = pareto_front[0]['genome']
+	print fitness
+	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=eval_time)
+	best.Send_To_Simulator(sim,eval_time=eval_time)
+	sim.Start()
 
 if __name__ == "__main__":
-	Sample_Run()
+	pass
+	import pickle
+	with open('Data/Quad_4_2016-11-17_14:28:29.pickle') as f:
+		data = pickle.load(f)
+
+	Play_Indv(data)
+
+	#Sample_Run()
 

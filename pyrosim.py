@@ -132,7 +132,7 @@ class PYROSIM:
                 outputString = outputString + ' ' + str(speed)
 
                 outputString = outputString + '\n'
-                print outputString
+                #print outputString
                 self.Send(outputString)
 
 	def Send_Light_Sensor(self, ID, objectIndex = 0 ):

@@ -1,5 +1,78 @@
 import math
 import copy
+class Base_Tree(object):
+	def __init__(self, base_position, tip_position, current_depth=0, node_ID=0,parent_ID=-1):
+		self.node_ID = node_ID
+		self.parent_ID = parent_ID
+		self.depth = depth
+
+		self.base_position = base_position
+		self.tip_position = tip_position
+
+		self.num_children = 0
+		self.children = []
+
+		self.is_leaf = True
+		self.num_leaves = 1
+		self.leaf_list = [self.node_ID]
+
+	def Add_Subtree(self, subtree):
+		self.num_children += 1
+		self.children.append(subtree)
+		subtree.parent_ID = self.node_ID
+
+		self.leaf_list=[]
+		for child in self.children:
+			self.leaf_list.append(child.leaf_list)
+
+	def Translate_Base_To_Pos(self,new_pos):
+		translation = [0]*len(new_pos)
+		for i in range(len(new_pos)):
+			translation[i] = new_pos[i] - self.base_position[i]
+
+		self.Translate_Base_By_Vec(translation)
+
+	def Translate_By_Vec(self,translation):
+		for i in range(len(self.translation)):
+			base_position[i] += translation[i]
+			tip_position[i] += translation[i]
+
+		for child in self.children:
+			child.Translate_By_Vec(translation)
+
+	def Rotate_About_Origin(self,angle):
+		for i in range(len(self.base_position)):
+			self.base_position[i] = pass
+			self.tip_position[i] = pass
+
+		for child in self.children:
+			child.Rotate_About_Origin(angle)
+
+	def Rotate_About_Pos(self, angle, rotation_position):
+		neg_translation = [0]*len(rotation_position)
+		pos_translation = [0]*len(rotation_position)
+		for i in range(len(rotation_position)):
+			neg_translation[i] = -rotation_position[i]
+			pos_translation[i] = rotation_position[i]
+		self.Translate_By_Vec(neg_translation)
+		self.Rotate_About_Origin(angle)
+		self.Translate_By_Vec(pos_translation)
+
+
+	def Rotate_About_Base(self, angle):
+		pos = self.base_position
+		self.Rotate_About_Pos(self,angle,pos)
+
+	def Rotate_About_Tip(self, angle):
+		pos = self.tip_position
+		self.Rotate_About_Pos(self,angle,pos)
+
+	def Rotate_About_Center(self, angle):
+		center = [0]*len(self.base_position)
+		for i in range(len(center)):
+			center[i] = (base_position[i]+tip_position[i])/2.0
+		pos = center
+		self.Rotate_About_Pos(self,angle,pos)
 
 class Tree(object):
 	def __init__(self,num_children=2,current_depth=0,max_depth=1,base_position=[0,0,0],

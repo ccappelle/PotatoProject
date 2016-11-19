@@ -149,8 +149,8 @@ class NPed(Robot):
 	def Add_Random_Network(self):
 		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,hidden_per_layer=self.num_legs*2,num_motors=self.num_legs*2)
 		
-		self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=1,num_motors=self.num_legs*2, 
-												development_layers=self.development_layers, back_connections=1,motor_recurrence=0,hidden_recurrence=1)
+		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=1,num_motors=self.num_legs*2, 
+		#										development_layers=self.development_layers, back_connections=1,motor_recurrence=0,hidden_recurrence=1)
 
 		#self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=2,hidden_per_layer=self.num_legs*2,
 		#										development_layers=self.development_layers)
@@ -213,7 +213,7 @@ class Treebot(Robot):
 		self.Init_Parts(self.tree)
 
 		self.network = networks.NM_TreeNetwork(self.tree,num_layers=1,hidden_per_layer=1)
-		print len(self.joints)
+		#print len(self.joints)
 	def Init_Parts(self,tree):
 		pos = tree.Get_Center()
 		orientation = tree.Get_Orientation()
@@ -272,7 +272,7 @@ def _Test_Tree():
 	sim.Start()
 	sim.Wait_To_Finish()
 	data = sim.Get_Results()
-	print t.network.adj_matrix[:,:,0]
+	#print t.network.adj_matrix[:,:,0]
 
 def _Test_Mutate_Quad(sim):
 	quad = Quadruped(color=[0.4,0.4,1.0])
