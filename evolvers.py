@@ -6,7 +6,7 @@ import copy
 
 EVAL_TIME = 1000
 MAX_GENERATIONS = 300
-NUM_IN_PARALLEL = 5
+NUM_IN_PARALLEL = 10
 class Evolver(object):
 	def __init__(self,max_population_size,generator_fcn,fitness_fcn={},max_generations=MAX_GENERATIONS,eval_time=EVAL_TIME,maximize=True,
 					development_layers = 1):

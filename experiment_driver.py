@@ -8,7 +8,7 @@ import pickle
 import datetime as dt
 
 
-def run_quad(trial_num,pop_size,gens,development_layers)
+def run_quad(trial_num,pop_size,gens,development_layers):
 	generator_fcn = robots.Quadruped
 	fitness_fcn = evolvers.Max_Y
 
