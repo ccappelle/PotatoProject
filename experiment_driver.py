@@ -10,7 +10,7 @@ import datetime as dt
 pop_size = 50
 generator_fcn = robots.Quadruped
 fitness_fcn = evolvers.Max_Y
-gens = 1000
+gens = 10
 development_layers = 1
 trial_num = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
 args = sys.argv

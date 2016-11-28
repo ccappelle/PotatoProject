@@ -4,7 +4,7 @@ import simObjects
 from pyrosim import PYROSIM
 import copy
 import math
-from tree import Sym_Tree
+# from tree import Sym_Tree
 
 CREATE_NETWORK = -1
 BOX = 0
@@ -196,83 +196,83 @@ class Quadruped(NPed):
 
 
 
-class Treebot(Robot):
-	def __init__(self, num_children=2,max_depth=1, branch_length=1,color=(1,0,0)):
-		super(Treebot,self).__init__()
-
-		self.branch_length = branch_length
-		self.radius = branch_length/10.
-		self.color = color
-		self.r,self.g,self.b = color
-		self.tree = Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
-			branch_length=branch_length,
-			base_position=[0.,0.,0.5],lo_angle=-math.pi/4,hi_angle=math.pi/4,global_angle=0,node_ID=0)
-
-		self.ray_sensor_ID = 0
-
-		self.Init_Parts(self.tree)
-
-		self.network = networks.NM_TreeNetwork(self.tree,num_layers=1,hidden_per_layer=1)
-		#print len(self.joints)
-	def Init_Parts(self,tree):
-		pos = tree.Get_Center()
-		orientation = tree.Get_Orientation()
-		node_ID = tree.node_ID
-		parent_ID = tree.parent_ID
-
-		
-		self.Add_Cylinder(ID=node_ID,x=pos[0],y=pos[1],z=pos[2],
-					r1=orientation[0],r2=orientation[1],r3=orientation[2],
-					length=self.branch_length,
-					radius=self.radius,r=self.r,g=self.g,b=self.b)
-
-
-
-		if tree.depth>0:
-			lo = 0
-			hi = 0
-		else:
-			lo = tree.lo_angle
-			hi = tree.hi_angle
-
-		self.Add_Hinge_Joint(ID=node_ID,firstObjectID=node_ID,secondObjectID=parent_ID,
-			x=tree.base_position[0],y=tree.base_position[1],
-			z=tree.base_position[2],n1=0,n2=0,n3=-1,lo=lo,hi=hi,
-			speed=MOTOR_SPEED)
-		# self.Add_Hinge_Joint(ID=node_ID, firstObjectID=node_ID,secondObjectID=parent_ID,
-		# 	x=0.0,y=0.0,z=0.5,n1=1,n2=0,n3=0,lo=-1,hi=1,speed=MOTOR_SPEED)
-		if tree.is_leaf:
-			self.Add_Ray_Sensor(ID=self.ray_sensor_ID, object_ID=node_ID, x=pos[0],y=pos[1],z=pos[2],
-									r1=orientation[0],r2=orientation[1],r3=orientation[2])
-			self.ray_sensor_ID += 1
-		else:
-			for child in tree.children:
-				self.Init_Parts(child)
-	def Send_To_Simulator(self,sim, eval_time=500, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-		IDs = super(Treebot,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
-												objID=objID,jointID=jointID,sensorID=sensorID)
-		last_objID = IDs[0]
-		last_jointID = IDs[1]
-		last_sensorID = IDs[2]
-		last_neuronID = neuronID
-		##### SEND NETWORK ###############################
-		if send_network:
-			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID,eval_time=eval_time)
-			last_neuronID += self.network.total_neurons
-
-		return last_objID,last_jointID,last_sensorID,last_neuronID
-
-def _Test_Tree():
-
-	T = 1000
-	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T,xyz=[0,0,5],hpr=[90,-90,0])
-	#sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T, xyz=[-5,0,2], hpr=[0,-20,0])
-	t = Treebot()
-	t.Send_To_Simulator(sim)
-	sim.Start()
-	sim.Wait_To_Finish()
-	data = sim.Get_Results()
-	#print t.network.adj_matrix[:,:,0]
+# class Treebot(Robot):
+# 	def __init__(self, num_children=2,max_depth=1, branch_length=1,color=(1,0,0)):
+# 		super(Treebot,self).__init__()
+#
+# 		self.branch_length = branch_length
+# 		self.radius = branch_length/10.
+# 		self.color = color
+# 		self.r,self.g,self.b = color
+# 		self.tree = Tree(num_children=num_children,current_depth=0,max_depth=max_depth,
+# 			branch_length=branch_length,
+# 			base_position=[0.,0.,0.5],lo_angle=-math.pi/4,hi_angle=math.pi/4,global_angle=0,node_ID=0)
+#
+# 		self.ray_sensor_ID = 0
+#
+# 		self.Init_Parts(self.tree)
+#
+# 		self.network = networks.NM_TreeNetwork(self.tree,num_layers=1,hidden_per_layer=1)
+# 		#print len(self.joints)
+# 	def Init_Parts(self,tree):
+# 		pos = tree.Get_Center()
+# 		orientation = tree.Get_Orientation()
+# 		node_ID = tree.node_ID
+# 		parent_ID = tree.parent_ID
+#
+#
+# 		self.Add_Cylinder(ID=node_ID,x=pos[0],y=pos[1],z=pos[2],
+# 					r1=orientation[0],r2=orientation[1],r3=orientation[2],
+# 					length=self.branch_length,
+# 					radius=self.radius,r=self.r,g=self.g,b=self.b)
+#
+#
+#
+# 		if tree.depth>0:
+# 			lo = 0
+# 			hi = 0
+# 		else:
+# 			lo = tree.lo_angle
+# 			hi = tree.hi_angle
+#
+# 		self.Add_Hinge_Joint(ID=node_ID,firstObjectID=node_ID,secondObjectID=parent_ID,
+# 			x=tree.base_position[0],y=tree.base_position[1],
+# 			z=tree.base_position[2],n1=0,n2=0,n3=-1,lo=lo,hi=hi,
+# 			speed=MOTOR_SPEED)
+# 		# self.Add_Hinge_Joint(ID=node_ID, firstObjectID=node_ID,secondObjectID=parent_ID,
+# 		# 	x=0.0,y=0.0,z=0.5,n1=1,n2=0,n3=0,lo=-1,hi=1,speed=MOTOR_SPEED)
+# 		if tree.is_leaf:
+# 			self.Add_Ray_Sensor(ID=self.ray_sensor_ID, object_ID=node_ID, x=pos[0],y=pos[1],z=pos[2],
+# 									r1=orientation[0],r2=orientation[1],r3=orientation[2])
+# 			self.ray_sensor_ID += 1
+# 		else:
+# 			for child in tree.children:
+# 				self.Init_Parts(child)
+# 	def Send_To_Simulator(self,sim, eval_time=500, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
+# 		IDs = super(Treebot,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
+# 												objID=objID,jointID=jointID,sensorID=sensorID)
+# 		last_objID = IDs[0]
+# 		last_jointID = IDs[1]
+# 		last_sensorID = IDs[2]
+# 		last_neuronID = neuronID
+# 		##### SEND NETWORK ###############################
+# 		if send_network:
+# 			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID,eval_time=eval_time)
+# 			last_neuronID += self.network.total_neurons
+#
+# 		return last_objID,last_jointID,last_sensorID,last_neuronID
+#
+# def _Test_Tree():
+#
+# 	T = 1000
+# 	sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T,xyz=[0,0,5],hpr=[90,-90,0])
+# 	#sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T, xyz=[-5,0,2], hpr=[0,-20,0])
+# 	t = Treebot()
+# 	t.Send_To_Simulator(sim)
+# 	sim.Start()
+# 	sim.Wait_To_Finish()
+# 	data = sim.Get_Results()
+# 	#print t.network.adj_matrix[:,:,0]
 
 def _Test_Mutate_Quad(sim):
 	quad = Quadruped(color=[0.4,0.4,1.0])
@@ -341,5 +341,5 @@ if __name__ == "__main__":
 	# index = 0
 	# #Robot_Army(sim)
 	#_Test_Mutate_Quad(sim)
-	_Test_Tree()
+	# _Test_Tree()
 
