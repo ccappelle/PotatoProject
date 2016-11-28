@@ -1,0 +1,13 @@
+#PBS -j oe
+#PBS -N PotatoTest
+#PBS -m a
+#PBS -m b
+#PBS -o $HOME/pkg/PotatoProject/pbs.log
+#PBS -M skriegma@uvm.edu
+#PBS -l nodes=1:ppn=10,pmem=1gb,pvmem=1gb
+#PBS -l walltime=03:00:00
+#PBS -q shortq
+
+PATH=$HOME/anaconda/bin:$PATH
+cd $HOME/pkg/PotatoProject/
+PYTHONPATH=$HOME/pkg/PotatoProject/ $HOME/anaconda/bin/python ./potato_driver.py
