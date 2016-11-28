@@ -6,6 +6,7 @@ def run_all_devo(trial_num,pop_size,gens):
 	for devo_layers in [1,2,3]:
 		experiment_driver.run_quad(trial_num,pop_size,gens,devo_layers)
 
+
 if __name__=='__main__':
 	gens = 1000
 	trial_num = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
