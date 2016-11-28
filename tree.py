@@ -21,6 +21,7 @@ class Base_Tree(object):
 		self.children.append(subtree)
 		subtree.parent_ID = self.node_ID
 
+		self.is_leaf = False
 		self.leaf_list=[]
 		for child in self.children:
 			self.leaf_list.append(child.leaf_list)
@@ -41,9 +42,18 @@ class Base_Tree(object):
 			child.Translate_By_Vec(translation)
 
 	def Rotate_About_Origin(self,angle):
+		rot_mat = [[math.cos(angle), -math.sin(angle), 0],
+					[math.sin(angle), math.cos(angle), 0],
+					[0,0,1]]
+		new_tip = [0]*3
+		new_base = [0]*3
 		for i in range(len(self.base_position)):
-			self.base_position[i] = pass
-			self.tip_position[i] = pass
+			for j in range(len(self.base_position)):
+				new_tip[i] += self.tip_position[j]*rot_mat[i][j]
+				new_base[i] += self.base_position[j]*rot_mat[i][j]
+
+		self.base_position = new_base
+		self.tip_position = new_tip
 
 		for child in self.children:
 			child.Rotate_About_Origin(angle)
@@ -74,6 +84,22 @@ class Base_Tree(object):
 		pos = center
 		self.Rotate_About_Pos(self,angle,pos)
 
+	def Recalc(self, start_ID=0):
+		self.node_ID = start_ID
+		last_ID = start_ID
+
+		if self.is_leaf = True:
+			self.leaf_list = [self.node_ID]
+		else:
+			self.leaf_list = []
+			for child in self.children:
+				last_ID, leaf_list = child.Recalc(last_ID+1)
+				self.leaf_list.append(leaf_list)
+
+		self.last_ID = last_ID
+		
+
+		return self.last_ID, self.leaf_list
 class Tree(object):
 	def __init__(self,num_children=2,current_depth=0,max_depth=1,base_position=[0,0,0],
 					branch_length=1,global_angle=0,lo_angle=-math.pi/4,hi_angle= math.pi/4,node_ID=0,parent_ID=-1):
