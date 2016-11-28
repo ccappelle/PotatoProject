@@ -4,7 +4,7 @@ import simObjects
 from pyrosim import PYROSIM
 import copy
 import math
-from tree import Tree
+from tree import Sym_Tree
 
 CREATE_NETWORK = -1
 BOX = 0
@@ -156,7 +156,7 @@ class NPed(Robot):
 		#										development_layers=self.development_layers)
 	
 		self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=2,num_motors=self.num_legs*2, 
-												development_layers=self.development_layers, back_connections=0,motor_recurrence=1,hidden_recurrence=0)
+												development_layers=self.development_layers, back_connections=0,motor_recurrence=0,hidden_recurrence=0)
 
 	def Send_To_Simulator(self,sim, eval_time, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		IDs = super(NPed,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,

@@ -1,20 +1,27 @@
 import math
 import copy
+import matplotlib.pyplot as plt
+
+XY_PLANE = 0
+XZ_PLANE = 1
+YZ_PLANE = 2
+
 class Base_Tree(object):
 	def __init__(self, base_position, tip_position, current_depth=0, node_ID=0,parent_ID=-1):
-		self.node_ID = node_ID
-		self.parent_ID = parent_ID
-		self.depth = depth
+		# self.node_ID = node_ID
+		# self.parent_ID = parent_ID
+		# self.depth = depth
 
-		self.base_position = base_position
-		self.tip_position = tip_position
+		# self.base_position = base_position
+		# self.tip_position = tip_position
 
-		self.num_children = 0
-		self.children = []
+		# self.num_children = 0
+		# self.children = []
 
-		self.is_leaf = True
-		self.num_leaves = 1
-		self.leaf_list = [self.node_ID]
+		# self.is_leaf = True
+		# self.num_leaves = 1
+		# self.leaf_list = [self.node_ID]
+		pass
 
 	def Add_Subtree(self, subtree):
 		self.num_children += 1
@@ -31,22 +38,32 @@ class Base_Tree(object):
 		for i in range(len(new_pos)):
 			translation[i] = new_pos[i] - self.base_position[i]
 
-		self.Translate_Base_By_Vec(translation)
+		self.Translate_By_Vec(translation)
 
 	def Translate_By_Vec(self,translation):
-		for i in range(len(self.translation)):
-			base_position[i] += translation[i]
-			tip_position[i] += translation[i]
+		for i in range(len(translation)):
+			self.base_position[i] += translation[i]
+			self.tip_position[i] += translation[i]
 
 		for child in self.children:
 			child.Translate_By_Vec(translation)
-
-	def Rotate_About_Origin(self,angle):
-		rot_mat = [[math.cos(angle), -math.sin(angle), 0],
+	def Rotate_About_Origin(self, angle, rotation_plane=XY_PLANE):
+		if rotation_plane == XY_PLANE:
+			rot_mat = [[math.cos(angle), -math.sin(angle), 0],
 					[math.sin(angle), math.cos(angle), 0],
 					[0,0,1]]
-		new_tip = [0]*3
-		new_base = [0]*3
+		elif rotation_plane == XZ_PLANE:
+			rot_mat = [[math.cos(angle), 0, -math.sin(angle)],
+						[0, 1, 0],
+						[math.sin(angle), 0, math.cos(angle)]]
+		elif rotation_plane == YZ_PLANE:
+			rot_mat = [[1, 0, 0],
+						[0, math.cos(angle), math.sin(angle)],
+						[0, -math.sin(angle), math.cos(angle)]]
+
+		new_tip = [0]*len(self.tip_position)
+		new_base = [0]*len(self.base_position)
+
 		for i in range(len(self.base_position)):
 			for j in range(len(self.base_position)):
 				new_tip[i] += self.tip_position[j]*rot_mat[i][j]
@@ -56,39 +73,39 @@ class Base_Tree(object):
 		self.tip_position = new_tip
 
 		for child in self.children:
-			child.Rotate_About_Origin(angle)
+			child.Rotate_About_Origin(angle, rotation_plane = rotation_plane)
 
-	def Rotate_About_Pos(self, angle, rotation_position):
+	def Rotate_About_Pos(self, angle, rotation_position, rotation_plane=XY_PLANE):
 		neg_translation = [0]*len(rotation_position)
 		pos_translation = [0]*len(rotation_position)
 		for i in range(len(rotation_position)):
 			neg_translation[i] = -rotation_position[i]
 			pos_translation[i] = rotation_position[i]
 		self.Translate_By_Vec(neg_translation)
-		self.Rotate_About_Origin(angle)
+		self.Rotate_About_Origin(angle, rotation_plane)
 		self.Translate_By_Vec(pos_translation)
 
 
-	def Rotate_About_Base(self, angle):
+	def Rotate_About_Base(self, angle, rotation_plane=XY_PLANE):
 		pos = self.base_position
-		self.Rotate_About_Pos(self,angle,pos)
+		self.Rotate_About_Pos(angle,pos)
 
-	def Rotate_About_Tip(self, angle):
+	def Rotate_About_Tip(self, angle, rotation_plane=XY_PLANE):
 		pos = self.tip_position
-		self.Rotate_About_Pos(self,angle,pos)
+		self.Rotate_About_Pos(angle,pos)
 
-	def Rotate_About_Center(self, angle):
+	def Rotate_About_Center(self, angle, rotation_plane=XY_PLANE):
 		center = [0]*len(self.base_position)
 		for i in range(len(center)):
 			center[i] = (base_position[i]+tip_position[i])/2.0
 		pos = center
-		self.Rotate_About_Pos(self,angle,pos)
+		self.Rotate_About_Pos(angle,pos)
 
 	def Recalc(self, start_ID=0):
 		self.node_ID = start_ID
 		last_ID = start_ID
 
-		if self.is_leaf = True:
+		if self.is_leaf == True:
 			self.leaf_list = [self.node_ID]
 		else:
 			self.leaf_list = []
@@ -100,14 +117,42 @@ class Base_Tree(object):
 		
 
 		return self.last_ID, self.leaf_list
-class Tree(object):
+
+	def Scale(self,scale_factor):
+		normalized_orientation = [0]*3
+		new_branch_length = scale_factor*self.branch_length
+
+		for i in range(3):
+			normalized_orientation[i] = (self.tip_position[i]-self.base_position[i])/self.branch_length
+		
+		for i in range(3):
+			self.tip_position[i] = self.base_position[i]+ normalized_orientation[i]*new_branch_length	 
+
+		self.Recalc_Branch_Length()
+
+		for child in self.children:
+			child.Translate_Base_To_Pos(self.tip_position)
+
+	def Scale_Whole_Tree(self,scale_factor):
+		self.Scale(scale_factor)
+		for child in self.children:
+			child.Scale_Whole_Tree(scale_factor)
+
+	def Recalc_Branch_Length(self):
+		temp_sum = 0.0
+		for i in range(3):
+			temp_sum += math.pow((self.tip_position[i]-self.base_position[i]),2.0)
+		self.branch_length = math.sqrt(temp_sum)
+		return self.branch_length
+
+class Sym_Tree(Base_Tree):
 	def __init__(self,num_children=2,current_depth=0,max_depth=1,base_position=[0,0,0],
 					branch_length=1,global_angle=0,lo_angle=-math.pi/4,hi_angle= math.pi/4,node_ID=0,parent_ID=-1):
 
 		self.node_ID = node_ID
 		self.parent_ID = parent_ID
 		self.highest_child_ID = node_ID
-		self.branch_length = branch_length
+		self.branch_length = float(branch_length)
 
 		self.base_position = base_position
 		self.tip_position = [0]*3
@@ -151,8 +196,9 @@ class Tree(object):
 			for nc in range(self.num_children):
 				child_angle = self.angle + lo_angle + nc*angle_incr
 				child_ID = self.highest_child_ID + 1
-				child = Tree(num_children=self.lineage, current_depth=self.depth+1,
-					max_depth=self.max_depth, base_position=self.tip_position, branch_length=self.branch_length,
+				child = Sym_Tree(num_children=self.lineage, current_depth=self.depth+1,
+					max_depth=self.max_depth, base_position=[self.tip_position[0],self.tip_position[1],self.tip_position[2]], 
+					branch_length=self.branch_length,
 					global_angle=child_angle,lo_angle=lo_angle/2.0,hi_angle=hi_angle/2.0, 
 					node_ID=child_ID,parent_ID=self.node_ID)
 				self.num_leaves += child.num_leaves
@@ -161,10 +207,7 @@ class Tree(object):
 				
 				for leaf_ID in child.leaf_list:
 					self.leaf_list.append(leaf_ID)
-				self.children.append(child)
-				
-				
-
+				self.children.append(child)	
 
 	def Plot_Tree(self,ax):
 		plt.plot([self.tip_position[1],self.base_position[1]],[self.tip_position[0],self.base_position[0]])
@@ -173,6 +216,31 @@ class Tree(object):
 		for c in self.children:
 			c.Plot_Tree(ax)
 
+	def Scale_Node(self,target_node_ID, scale_factor):
+		found = False
+		if self.node_ID == target_node_ID:
+			self.Scale(scale_factor)
+			return True
+		else:
+			for child in self.children:
+				if child.highest_child_ID >= target_node_ID and child.node_ID<=target_node_ID:
+					found = child.Scale_Node(target_node_ID, scale_factor)
+				if found:
+					return True
+		return found
+
+	def Rotate_Node(self,target_node_ID,angle, rotation_plane=XY_PLANE):
+		found = False
+		if self.node_ID == target_node_ID:
+			self.Rotate_About_Base(angle,rotation_plane)
+			return True
+		else:
+			for child in self.children:
+				if child.highest_child_ID >= target_node_ID and child.node_ID<=target_node_ID:
+					found = child.Rotate_Node(target_node_ID, angle,rotation_plane)
+				if found:
+					return True
+		return found
 	def Get_Center(self):
 		center = [0]*3
 		for i in range(3):
@@ -185,19 +253,37 @@ class Tree(object):
 			orientation[i] = self.tip_position[i]-self.base_position[i]
 		return orientation
 
-if __name__ == "__main__":
-	import matplotlib.pyplot as plt
-	num_children = 4
-	max_depth = 2
+def _Test_Tree_Plot():
+	num_children = 2
+	max_depth = 4
 	branch_length = .75
 
-
-	t = Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
+	t = Sym_Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
 		branch_length=branch_length,
 		base_position=[0,0,0.5],lo_angle=-math.pi/4.,hi_angle=math.pi/4.,global_angle=math.pi/2.0,node_ID=0)
 
 	print t.num_leaves,t.num_nodes,t.leaf_list
+
+
+	_Plot(t)
+	#t.Rotate_Node(1,math.pi/4.0)
+	#t.Scale(3.0)
+	#t.Scale_Node(1,2.0)
+	#t.Rotate_Node(1,-.3)
+	#_Plot(t)
+	t.Scale_Whole_Tree(.5)
+	_Plot(t)
+
+	plt.show()
+
+
+def _Plot(t):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	t.Plot_Tree(ax)
-	plt.show()
+
+if __name__ == "__main__":
+	_Test_Tree_Plot()
+
+
+
