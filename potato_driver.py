@@ -1,6 +1,7 @@
 import experiment_driver
 import sys
 import datetime as dt
+
 pass
 
 def run_all_devo(trial_num,pop_size,gens):
@@ -15,10 +16,10 @@ if __name__=='__main__':
 	args = sys.argv
 
 	if len(args)>=2:
-		trial_num = args[1]
+		trial_num = int(args[1])
 	if len(args)>=3:
-		gens = args[2]
+		gens = int(args[2])
 	if len(args)>=4:
-		pop_size = args[3]
+		pop_size = int(args[3])
 
-	run_all_devo(trial_num,pop_size,gens,development_layers)
+	run_all_devo(trial_num,pop_size,gens)
