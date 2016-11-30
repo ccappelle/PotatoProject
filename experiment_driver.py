@@ -21,7 +21,7 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 	data['data'] = evolver.Evolve()
 
 	data_folder = './Data'
-	file_name = 'Quad_'+str(development_layers)+'_'+ trial_num + '.pickle'
+	file_name = 'Quad_'+str(development_layers)+'_'+ str(trial_num) + '.pickle'
 
 	if not os.path.isdir(data_folder):
 		os.mkdir(data_folder)
@@ -38,13 +38,13 @@ if __name__=='__main__':
 	args = sys.argv
 
 	if len(args)>=2:
-		trial_num = args[1]
+		trial_num = int(args[1])
 	if len(args)>=3:
-		development_layers = args[2]
+		development_layers = int(args[2])
 	if len(args)>=4:
-		gens = args[3]
+		gens = int(args[3])
 
 	if len(args)>=5:
-		pop_size = args[4]
+		pop_size = int(args[4])
 
 	run_quad(trial_num,pop_size,gens,development_layers)
