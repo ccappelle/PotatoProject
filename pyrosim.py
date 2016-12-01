@@ -284,12 +284,11 @@ class PYROSIM:
         def Wait_To_Finish(self):
 
 		dataFromSimulator = self.simulator.communicate()
+                error = dataFromSimulator[1]
                 dataFromSimulator = dataFromSimulator[0]
                 dataFromSimulator = dataFromSimulator.split()
-                while len(dataFromSimulator)==0:
-                        dataFromSimulator = self.simulator.communicate()
-                        dataFromSimulator = dataFromSimulator[0]
-                        dataFromSimulator = dataFromSimulator.split()                       
+                if len(dataFromSimulator)==0:
+                        print error                   
 
                 self.Collect_Sensor_Data(dataFromSimulator)
 
