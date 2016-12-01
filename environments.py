@@ -20,7 +20,7 @@ class Environment(object):
 
 class Sym_Env(Environment):
  	"""docstring for Tree_E"""
- 	def __init__(self, objs_per_group, radius, distance, num_groups=2, origin=(0.,1.,0.5)):
+ 	def __init__(self, objs_per_group, distance, num_groups=2, line_length=1.0,origin=(0.,1.,0.5)):
  		super(Sym_Env,self).__init__()
 	 	self.joints = []
 	 	self.group_centers = [0]*num_groups
@@ -46,9 +46,20 @@ class Sym_Env(Environment):
  				self.group_centers[i][j] = self.group_centers[i][j]*distance+origin[j]
 
  		self.group = [0]*num_groups
+ 		object_ID = 0
  		for i in range(len(objs_per_group)):
- 			self.group[i] = [0]*objs_per_group[i]
+ 			self.group[i] = []
+ 			x0,y0,z0 = self.group_centers[i]
+ 			radius = objs_per_group[i]/float(line_length)+.05
+
+ 			if objs_per_group[i]%2==1:
+				cyl = simObjects.Cylinder(ID=object_ID,x=x0,y=y0,z=z0,r1=0,r2=0,r3=1,
+						length=2.*z0, radius=radius)
+ 				self.group[i].append(cyl)
+ 				object_ID += 1
+
  			for j in range(objs_per_group[i]):
+ 				self.group[i][j] = []
 
 
 if __name__=="__main__":

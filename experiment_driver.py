@@ -20,7 +20,7 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 	data['eval_time'] = evolver.eval_time
 	data['data'] = evolver.Evolve()
 
-	data_folder = './Data/'+str(time_stamp)
+	data_folder = './Data/'
 	file_name = 'Quad_'+str(development_layers)+'_'+ str(trial_num) +'_'+ str(time_stamp) +'.pickle'
 
 	if not os.path.isdir(data_folder):

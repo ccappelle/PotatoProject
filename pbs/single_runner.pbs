@@ -1,5 +1,5 @@
 #PBS -j oe
-#PBS -N PotatoTest
+#PBS -N PotatoTest_${ARG_DEVO}_${ARG_TRIAL}
 #PBS -m abe
 #PBS -M collin.cappelle@gmail.com
 #PBS -o pbs_${ARG_DEVO}_${ARG_TRIAL}.log
