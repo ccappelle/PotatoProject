@@ -61,7 +61,7 @@ class Network(object):
 
 					start_time = int((start_time + 1.)*eval_time/2.)
 					end_time = start_time + int((end_time +1.)*eval_time/2.)
-					print start_time, end_time
+					print start_weight,end_weight,start_time, end_time
 					sim.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,
 											start_weight=start_weight, end_weight=end_weight,
 											start_time=start_time,end_time=end_time)
