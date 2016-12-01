@@ -32,7 +32,7 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 
 if __name__=='__main__':
 	gens = 1000
-	development_layers = 1
+	development_layers = 2
 
 	trial_num = 0
 	pop_size = 50

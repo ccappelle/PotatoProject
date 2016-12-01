@@ -20,7 +20,7 @@ class Environment(object):
 
 class Sym_Env(Environment):
  	"""docstring for Tree_E"""
- 	def __init__(self, num_objects, radius, distance, num_groups=2, origin=(0.,1.,0.5)):
+ 	def __init__(self, objs_per_group, radius, distance, num_groups=2, origin=(0.,1.,0.5)):
  		super(Sym_Env,self).__init__()
 	 	self.joints = []
 	 	self.group_centers = [0]*num_groups
@@ -28,11 +28,13 @@ class Sym_Env(Environment):
 
 	 	center_angle = math.pi/2.0
 
-	 	incr = 1.0/float(num_groups+2.0)
-	 	mult = 1
+	 	incr = math.pi/float(num_groups+2.0)
+	 	mult = 1.
 	 	for i in range(0,num_groups,2):
 	 		pos_angle = center_angle+mult*incr
 	 		neg_angle = center_angle-mult*incr
+	 		print pos_angle, neg_angle, math.pi/4.0, 3.*math.pi/4.0
+	 		print math.cos(pos_angle), math.cos(neg_angle)
 	 		self.group_centers[i] = [math.cos(pos_angle),math.sin(pos_angle),origin[2]]
 	 		self.group_orthagonal[i] = [ math.sin(neg_angle), math.cos(neg_angle), 0]
 	 		self.group_centers[i+1] = [math.cos(neg_angle),math.sin(neg_angle),origin[2]]
@@ -43,8 +45,14 @@ class Sym_Env(Environment):
  			for j in range(2):
  				self.group_centers[i][j] = self.group_centers[i][j]*distance+origin[j]
 
+ 		self.group = [0]*num_groups
+ 		for i in range(len(objs_per_group)):
+ 			self.group[i] = [0]*objs_per_group[i]
+ 			for j in range(objs_per_group[i]):
+
+
 if __name__=="__main__":
- 	env = Sym_Env(2,1,1)
+ 	env = Sym_Env([4],1.,1.,num_groups=4)
  	print env.group_centers
  	print env.group_orthagonal
 
@@ -53,4 +61,6 @@ if __name__=="__main__":
  	plt.plot([0, env.group_centers[0][0], env.group_centers[0][0]+env.group_orthagonal[0][0]],
  				[1,env.group_centers[0][1], env.group_centers[0][1]+env.group_orthagonal[0][1]])
  	plt.plot([0, env.group_centers[1][0]],[1,env.group_centers[1][1]])
+ 	plt.ylim([0,2])
+ 	plt.xlim([-1,1])
  	plt.show()
