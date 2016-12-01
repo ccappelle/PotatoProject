@@ -11,7 +11,7 @@ import datetime as dt
 def run_quad(trial_num,pop_size,gens,development_layers):
 	generator_fcn = robots.Quadruped
 	fitness_fcn = evolvers.Max_Y
-
+	time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
 	data = {}
 	evolver = evolvers.AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=development_layers,max_generations=gens)
 	data['pop_size'] = evolver.max_population_size
@@ -20,11 +20,11 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 	data['eval_time'] = evolver.eval_time
 	data['data'] = evolver.Evolve()
 
-	data_folder = './Data'
-	file_name = 'Quad_'+str(development_layers)+'_'+ str(trial_num) + '.pickle'
+	data_folder = './Data/'+str(time_stamp)
+	file_name = 'Quad_'+str(development_layers)+'_'+ str(trial_num) +'_'+ str(time_stamp) +'.pickle'
 
 	if not os.path.isdir(data_folder):
-		os.mkdir(data_folder)
+		os.makedirs(data_folder)
 
 	path_to_file = data_folder +'/'+file_name
 	with open(path_to_file,'w') as f:
@@ -33,7 +33,8 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 if __name__=='__main__':
 	gens = 1000
 	development_layers = 1
-	trial_num = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+
+	trial_num = 0
 	pop_size = 50
 	args = sys.argv
 

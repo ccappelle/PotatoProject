@@ -291,13 +291,19 @@ def Play_Indv(dumped_data, index=-1):
 	best.Send_To_Simulator(sim,eval_time=eval_time)
 	sim.Start()
 
+def _Test_Dev_Layers():
+	from robots import Quadruped
+	evolver = AFPO(50, Quadruped,Max_Y,development_layers=2, max_generations=10)
+	evolver.Evolve()
+
+
 if __name__ == "__main__":
 	pass
 	import pickle
-	with open('Data/Quad_4_2016-11-17_14:28:29.pickle') as f:
-		data = pickle.load(f)
+	# with open('Data/Quad_4_2016-11-17_14:28:29.pickle') as f:
+	# 	data = pickle.load(f)
 
-	Play_Indv(data)
-
+	# Play_Indv(data)
+	_Test_Dev_Layers()
 	#Sample_Run()
 

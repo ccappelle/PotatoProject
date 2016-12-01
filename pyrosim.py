@@ -298,7 +298,7 @@ class PYROSIM:
                 dataFromSimulator = dataFromSimulator[0]
 
                 dataFromSimulator = dataFromSimulator.split()
-
+                print len(dataFromSimulator), dataFromSimulator[-1]
 		index = 0
 
 		while ( dataFromSimulator[index] != 'Done' ):

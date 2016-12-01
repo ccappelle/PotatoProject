@@ -1,6 +1,6 @@
 #!/bin/bash
-ssh skriegma@bluemoon-user2.uvm.edu "mkdir scratch/$1"
-scp $1.py skriegma@bluemoon-user2.uvm.edu:~/scratch/$1/$1.py
-scp pbs/single_runner.pbs skriegma@bluemoon-user2.uvm.edu:~/scratch/$1/single_runner.pbs
-scp pbs/submit.sh skriegma@bluemoon-user2.uvm.edu:~/scratch/$1/submit.sh
-ssh skriegma@bluemoon-user2.uvm.edu "~/scratch/$1/submit.sh $1 $2"
+DATE="$(date +%y_%j_%k%M%S)"
+ssh ckcappel@bluemoon-user1.uvm.edu "mkdir -p scratch/logs/"
+scp single_runner.pbs ckcappel@bluemoon-user1.uvm.edu:~/runners/
+scp submit.sh ckcappel@bluemoon-user1.uvm.edu:~/runners/
+ssh ckcappel@bluemoon-user1.uvm.edu "~/runners/submit.sh" $1 $2 

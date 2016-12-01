@@ -1,23 +1,23 @@
 #!/bin/bash
 if [ -z "$1" ]
 then
-	echo "Experiment not specified"
+	echo "Num trials not specified"
 	exit 1
 fi
-echo "Using experiment: " $1
+echo "Num trials: " $1
 
 if [ -z "$2" ]
 then
-	echo "Number of runs not specified"
+	echo "Dev Layers not specified"
 	exit 1
 fi
-echo "Using number of runs: " $2
+echo "Dev Layers: " $2
 
 
-for x in `seq 1 $2`
+for x in `seq 1 $1`
 do
-	seed=${x}
-	qsub -vARG_EXP=$1,ARG_SEED=${seed} ~/scratch/$1/single_runner.pbs
-	echo "Run $x started with seed $seed"
+	#mkdir -p ~/scratch/logs/$x/$y
+	qsub -vARG_TRIAL=$x,ARG_DEVO=$2 ~/runners/single_runner.pbs 
+	echo "Run $x started with devo $2"
 	sleep 1;
 done

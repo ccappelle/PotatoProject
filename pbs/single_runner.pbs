@@ -1,13 +1,12 @@
 #PBS -j oe
 #PBS -N PotatoTest
-#PBS -m a
-#PBS -m b
-#PBS -o $HOME/scratch/$ARG_EXP/pbs_$ARG_SEED.log
-#PBS -M skriegma@uvm.edu
-#PBS -l nodes=1:ppn=1,pmem=1gb,pvmem=1gb
-#PBS -l walltime=00:05:00
+#PBS -m abe
+#PBS -M collin.cappelle@gmail.com
+#PBS -o pbs_${ARG_TRIAL}_${ARG_TRIAL}.log
+#PBS -l nodes=1:ppn=12,pmem=1gb,pvmem=1gb
+#PBS -l walltime=01:00:00
 #PBS -q shortq
 
 PATH=$HOME/anaconda/bin:$PATH
-cd $HOME/scratch/$ARG_EXP/
-PYTHONPATH=$HOME/pkg/PotatoProject/ $HOME/anaconda/bin/python ./$ARG_EXP.py $ARG_SEED 1 10 50
+cd $HOME/PotatoProject
+PYTHONPATH=$HOME/pkg/PotatoProject/ $HOME/anaconda/bin/python experiment_driver.py $ARG_TRIAL $ARG_DEVO 1000 50
