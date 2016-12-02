@@ -31,7 +31,7 @@ static dGeomID ground;
 static float xyz[3] = {0.8317f,-0.9817f,0.8000f};
 static float hpr[3] = {121.0000f,-27.5000f,0.0000f};
 const float GRAVITY = 2.0f;
-const float timestep = 0.05;
+const float timestep = 0.075;
 
 void Draw_Distance_Sensor(dGeomID myGeom, dGeomID hisGeom);
 
