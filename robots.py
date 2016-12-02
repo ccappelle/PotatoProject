@@ -11,7 +11,7 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
-MOTOR_SPEED = .8
+MOTOR_SPEED = .3
 
 class Robot(object):
 	def __init__(self):
