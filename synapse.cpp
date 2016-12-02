@@ -2,7 +2,7 @@
 #define _SYNAPSE_CPP
 
 #include "iostream"
-
+#include "cmath"
 #include "synapse.h"
 
 SYNAPSE::SYNAPSE(void) {
@@ -29,6 +29,7 @@ SYNAPSE::SYNAPSE(void) {
 	else{
 		weight_incr = (end_weight-start_weight)/double(end_time-start_time);
 	}
+
 }
 
 SYNAPSE::~SYNAPSE(void) {
@@ -54,6 +55,9 @@ void SYNAPSE::Update_Weight(int t){
 
 	if (t>=start_time && t<end_time){
 		weight = weight + weight_incr;
+		if (isnan(weight)){
+			std::cerr << " weight is nan ";
+		}
 	}
 }
 void SYNAPSE::Print(void) {
