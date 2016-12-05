@@ -14,11 +14,12 @@ SENSOR = 3
 MOTOR_SPEED = .5
 
 class Robot(object):
-	def __init__(self):
+	def __init__(self, motor_speed=MOTOR_SPEED):
 		self.body_parts=[]
 		self.joints=[]
 		self.sensors = []
 		self.network = False
+		self.motor_speed = motor_speed
 		
 	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
 						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
