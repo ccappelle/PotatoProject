@@ -20,7 +20,7 @@ class Robot(object):
 		self.sensors = []
 		self.network = False
 		self.motor_speed = motor_speed
-		
+
 	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
 						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		num_body_parts = len(self.body_parts)
@@ -130,11 +130,11 @@ class NPed(Robot):
 			self.Add_Hinge_Joint(ID=hip_ID,firstObjectID=body_ID,secondObjectID=thigh_ID,
 								x=leg_pos[0]*self.body_length/2.+self.x, 
 								y=leg_pos[1]*self.body_length/2.+self.y,
-								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[0],n3=0,speed=MOTOR_SPEED)
+								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[0],n3=0,speed=self.motor_speed)
 			self.Add_Hinge_Joint(ID=knee_ID,firstObjectID=thigh_ID,secondObjectID=calf_ID,
 								x=leg_pos[0]*l2+self.x,y=leg_pos[1]*l2+self.y,
 								z=self.z+self.z_incr,n1=-leg_pos[1],n2=leg_pos[0],n3=0,
-								speed=MOTOR_SPEED)
+								speed=self.motor_speed)
 			self.Add_Touch_Sensor(ID=sensor_ID,object_ID=calf_ID)
 			sensor_ID+= 1
 		self.Add_Position_Sensor(ID=sensor_ID,object_ID=body_ID)
