@@ -184,14 +184,15 @@ def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidd
 							motor_recurrence=motor_recurrence)
 
 if __name__ == "__main__":
-	from tree import Tree
-	#myNet = LayeredNetwork()
+	#from tree import Tree
+	myNet = LayeredNetwork(num_sensors=4,num_motors=8, num_layers=2,hidden_per_layer=8)
+	Plot(myNet)
 	#Create_Quad_Network()
 	#myNet.Mutate_p()
-	t = Tree()
-	myNet = NM_TreeNetwork(t,num_layers=1,hidden_per_layer=1)
-	print myNet.num_sensors,myNet.num_motors
-	print myNet.adj_matrix[:,:,0]
+	#t = Tree()
+	#myNet = NM_TreeNetwork(t,num_layers=1,hidden_per_layer=1)
+	#print myNet.num_sensors,myNet.num_motors
+	#print myNet.adj_matrix[:,:,0]
 
 
 	

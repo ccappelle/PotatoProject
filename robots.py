@@ -11,7 +11,7 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
-MOTOR_SPEED = .75
+MOTOR_SPEED = .5
 
 class Robot(object):
 	def __init__(self, motor_speed=MOTOR_SPEED):
@@ -130,9 +130,11 @@ class NPed(Robot):
 			self.Add_Hinge_Joint(ID=hip_ID,firstObjectID=body_ID,secondObjectID=thigh_ID,
 								x=leg_pos[0]*self.body_length/2.+self.x, 
 								y=leg_pos[1]*self.body_length/2.+self.y,
-								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[0],n3=0,speed=self.motor_speed)
+								z=self.z+self.z_incr, n1=-leg_pos[1],n2=leg_pos[0],n3=0,
+								speed=self.motor_speed)
 			self.Add_Hinge_Joint(ID=knee_ID,firstObjectID=thigh_ID,secondObjectID=calf_ID,
-								x=leg_pos[0]*l2+self.x,y=leg_pos[1]*l2+self.y,
+								x=leg_pos[0]*l2+self.x,
+								y=leg_pos[1]*l2+self.y,
 								z=self.z+self.z_incr,n1=-leg_pos[1],n2=leg_pos[0],n3=0,
 								speed=self.motor_speed)
 			self.Add_Touch_Sensor(ID=sensor_ID,object_ID=calf_ID)
@@ -330,7 +332,10 @@ if __name__ == "__main__":
 	import numpy as np
 
 	T = 200
-	#sim = PYROSIM(playPaused=False, playBlind=False, evalTime=T)
+	sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
+	mybot = Quadruped(color=[1.0,0.,0.])
+	mybot.Send_To_Simulator(sim,T)
+	sim.Start()
 	# objID = 0
 	# jointID = 0
 	# sensorID = 0
