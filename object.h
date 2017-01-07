@@ -32,6 +32,8 @@ private:
 
 	double r,g,b;
 
+	int collision;
+
         LIGHT_SENSOR *lightSensor;
 
 	POSITION_SENSOR *positionSensor;
@@ -98,12 +100,12 @@ private:
 
 	void CreateBox(dWorldID world, dSpaceID space,
                                 double x, double y, double z,
-                                double length, double width, double height);
+                                double length, double width, double height, int collision);
 
 	void CreateCylinder(dWorldID world, dSpaceID space,
                                                 double x, double y, double z,
                                                 double r1, double r2, double r3,
-                                                double length, double radius);
+                                                double length, double radius, int collision);
 	void DrawBox(void);
 
 	void DrawCylinder(void);

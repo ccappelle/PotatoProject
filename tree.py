@@ -1,6 +1,7 @@
 import math
 import copy
 import matplotlib.pyplot as plt
+import numpy as np
 
 XY_PLANE = 0
 XZ_PLANE = 1
@@ -8,19 +9,19 @@ YZ_PLANE = 2
 
 class Base_Tree(object):
 	def __init__(self, base_position, tip_position, current_depth=0, node_ID=0,parent_ID=-1):
-		# self.node_ID = node_ID
-		# self.parent_ID = parent_ID
-		# self.depth = depth
+		self.node_ID = node_ID
+		self.parent_ID = parent_ID
+		self.depth = depth
 
-		# self.base_position = base_position
-		# self.tip_position = tip_position
+		self.base_position = base_position
+		self.tip_position = tip_position
 
-		# self.num_children = 0
-		# self.children = []
+		self.num_children = 0
+		self.children = []
 
-		# self.is_leaf = True
-		# self.num_leaves = 1
-		# self.leaf_list = [self.node_ID]
+		self.is_leaf = True
+		self.num_leaves = 1
+		self.leaf_list = [self.node_ID]
 		pass
 
 	def Add_Subtree(self, subtree):

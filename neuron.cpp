@@ -102,7 +102,7 @@ void NEURON::Threshold(void) {
 
 		return;
 
-	//value = previousValue + tau * value;
+	value = previousValue + tau * value;
 
 	value = tanh(value);
 }

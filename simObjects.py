@@ -1,12 +1,13 @@
 import math
-
+import random
 
 class Shape(object):
-	def __init__(self,ID=0,x=0,y=0,z=0,r=0.5,g=0.5,b=0.5):
+	def __init__(self,ID=0,x=0,y=0,z=0,collision=True,r=0.5,g=0.5,b=0.5):
 		self.ID = ID
 		self.x = x
 		self.y = y
 		self.z = z
+		self.collision = collision
 		self.r,self.g,self.b = r,g,b
 
 	def Get_kwargs(self,x_offset=0,y_offset=0,z_offset=0,ID_offset=0):
@@ -15,15 +16,19 @@ class Shape(object):
 		kwargs['x'] = self.x+x_offset
 		kwargs['y'] = self.y+y_offset
 		kwargs['z'] = self.z+z_offset
+		kwargs['collision'] = self.collision
+		# kwargs['r'] = random.random()#self.r
+		# kwargs['g'] = random.random()#self.g
+		# kwargs['b'] = random.random()#self.b
+
 		kwargs['r'] = self.r
 		kwargs['g'] = self.g
 		kwargs['b'] = self.b
-
 		return kwargs
 
 class Cylinder(Shape):
-	def __init__(self,ID=0,x=0, y=0, z=0, r1=0, r2=0, r3=1, length=1.0, radius=0.1, r=1, g=1, b=1):
-		super(Cylinder,self).__init__(ID=ID,x=x,y=y,z=z,r=r,g=g,b=b)
+	def __init__(self,ID=0,x=0, y=0, z=0, collision=True,r1=0, r2=0, r3=1, length=1.0, radius=0.1, r=1, g=1, b=1):
+		super(Cylinder,self).__init__(ID=ID,x=x,y=y,z=z,collision=collision,r=r,g=g,b=b)
 		self.r1 = r1
 		self.r2 = r2
 		self.r3 = r3
@@ -45,8 +50,8 @@ class Cylinder(Shape):
 		return kwargs
 
 class Box(Shape):
-	def __init__(self,ID=0,x=0,y=0,z=0,length=0.1,width=0.1,height=0.1, r=0,g=0,b=0):
-		super(Box,self).__init__(x=x,y=y,z=z,r=r,g=g,b=b)
+	def __init__(self,ID=0,x=0,y=0,z=0,collision=True,length=0.1,width=0.1,height=0.1, r=0,g=0,b=0):
+		super(Box,self).__init__(x=x,y=y,z=z,collision=collision,r=r,g=g,b=b)
 		self.length = length
 		self.width = width	
 		self.height = height

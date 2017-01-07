@@ -3,6 +3,8 @@ from operator import itemgetter
 import random
 import numpy as np
 import copy
+import pickle
+import datetime as dt
 
 EVAL_TIME = 1000
 MAX_GENERATIONS = 300
@@ -99,6 +101,14 @@ class Evolver(object):
 	def Remove_Individual(self,index):
 		del sel.population[index]
 
+	def Quick_Save(self):
+		time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+		file_path = './Data/'+time_stamp+'.pickle'
+
+		data = self.population[0]
+
+		with open(file_path,'w') as f:
+			pickle.dump(data,f)
 
 class AFPO(Evolver):
 	def __init__(self,*args,**kwargs):
@@ -189,6 +199,8 @@ class AFPO(Evolver):
 			best[i]['fitness'] = fitness
 			if i%100 == 0 or i == self.max_generations-1:
 				best[i]['pareto_front'] = pareto_front
+			if i%50 == 0 and i>0:
+				self.Quick_Save()
 		return best
 
 	def Evolve_For_One_Generation(self):

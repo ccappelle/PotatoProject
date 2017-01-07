@@ -196,6 +196,8 @@ void OBJECT::Read_From_Python(dWorldID world, dSpaceID space, int shape) {
 
 	std::cin >> z;
 
+	std::cin >> collision;
+
 	if ( myShape == BOX ) {
 
 		std::cin >> length;
@@ -210,7 +212,7 @@ void OBJECT::Read_From_Python(dWorldID world, dSpaceID space, int shape) {
 
                 std::cin >> b;
 
-		CreateBox(world,space, x,y,z, length,width,height);
+		CreateBox(world,space, x,y,z, length,width,height,collision);
 	}
 	else {
 
@@ -230,7 +232,7 @@ void OBJECT::Read_From_Python(dWorldID world, dSpaceID space, int shape) {
 
                 std::cin >> b;
 
-                CreateCylinder(world,space, x,y,z, r1,r2,r3, length,radius);
+                CreateCylinder(world,space, x,y,z, r1,r2,r3, length,radius,collision);
 	}
 }
 
@@ -303,7 +305,7 @@ int OBJECT::Contains_A_Light_Source(void) {
 
 void OBJECT::CreateBox(dWorldID world, dSpaceID space,
                                 double x, double y, double z,
-                                double length, double width, double height) {
+                                double length, double width, double height,int collision) {
 
         dMass m;
 
@@ -316,12 +318,16 @@ void OBJECT::CreateBox(dWorldID world, dSpaceID space,
         dGeomSetBody (geom,body);
 
         dGeomSetData(geom,this);
+        if (!collision){
+			dBodyDisable(body);
+		}
 }
 
 void OBJECT::CreateCylinder(dWorldID world, dSpaceID space,
                                                 double x, double y, double z,
                                                 double r1, double r2, double r3,
-                                                double length, double radius) {
+                                                double length, double radius,
+                                                int collision) {
 
         dMass m;
 
@@ -333,14 +339,18 @@ void OBJECT::CreateCylinder(dWorldID world, dSpaceID space,
     	dBodySetRotation(body,R);
 
         // dMassSetSphere (&m,1,radius);
-	dMassSetCapsule(&m,1,1,radius,length);
+		dMassSetCapsule(&m,1,1,radius,length);
         dMassAdjust (&m,1);
         dBodySetMass (body,&m);
         // geom = dCreateCylinder(space,radius,length);
         geom = dCreateCapsule(space,radius,length);
         dGeomSetBody (geom,body);
 
-	dGeomSetData(geom,this);
+		dGeomSetData(geom,this);
+		if (!collision){
+			dBodyDisable(body);
+		}
+		
 }
 
 double OBJECT::Distance_To(OBJECT *otherObject) {

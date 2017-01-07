@@ -1,14 +1,16 @@
 import simObjects
 import math
+import numpy as np
 class Environment(object):
 	def __init__(self, init_objects = []):
+		self.env_objects = []
 		for env_object in init_objects:
 			self.env_objects.append(env_object)
 
-	def Add_Env_Object(env_object):
+	def Add_Env_Object(self,env_object):
 		self.env_objects.append(env_object)
 
-	def Add_Env_Object_List(env_objects):
+	def Add_Env_Objects(self,env_objects):
 		for env_object in env_objects:
 			self.env_objects.append(env_object)
 
@@ -17,61 +19,90 @@ class Environment(object):
 			env_object.Send_To_Simulator(sim,ID_offset=ID_offset)
 			ID_offset += 1
 
+		return ID_offset
 
-class Sym_Env(Environment):
+class Cluster(object):
+	def __init__(self, num_in,line_length,center_position,angle,color=[1,1,1]):
+		
+		self.diameter = line_length/float(num_in)
+		direction_vector = np.array([math.cos(angle),math.sin(angle)])
+		center_position = np.array(center_position)
+
+		self.line_start = center_position[:2]-direction_vector*line_length/2.0
+		self.line_end = center_position[:2]+direction_vector*line_length/2.0
+
+		self.num_in = num_in
+		self.line_length = line_length
+		self.center_position = center_position
+		self.angle = angle
+		self.cluster_centers = np.zeros((num_in,2))		
+		self.objects_in_cluster = []
+		self.color = color
+
+		for i in range(self.num_in):			 
+			self.cluster_centers[i,:] = self.line_start+(self.diameter/2.0)*direction_vector + i*(self.diameter)*direction_vector
+			
+			cyl = simObjects.Cylinder(x=self.cluster_centers[i,0],y=self.cluster_centers[i,1],
+												z=center_position[2], collision=False,
+												r1=0,r2=0,r3=1,length=1.0,radius=self.diameter/2.0+.05,
+												r=self.color[0],g=self.color[1],b=self.color[2])
+			self.objects_in_cluster.append(cyl)
+			print self.cluster_centers[i,:]
+	
+	def Plot_Cluster(self):
+		plt.plot([self.line_start[0],self.line_end[0]],[self.line_start[1],self.line_end[1]])
+		plt.plot(self.cluster_centers[:,0],self.cluster_centers[:,1],'ro')
+
+class Cluster_Env(Environment):
  	"""docstring for Tree_E"""
- 	def __init__(self, objs_per_group, distance, num_groups=2, line_length=1.0,origin=(0.,1.,0.5)):
- 		super(Sym_Env,self).__init__()
-	 	self.joints = []
-	 	self.group_centers = [0]*num_groups
-	 	self.group_orthagonal = [0]*num_groups
+ 	ODD_COLOR = [1,0,1]
+ 	EVEN_COLOR = [0,1,1]
 
-	 	center_angle = math.pi/2.0
+ 	def __init__(self, num_per_cluster, center_positions, cluster_angles,line_length,colors):
+ 		super(Cluster_Env,self).__init__()
+ 		self.num_clusters = len(num_per_cluster)
+ 		self.clusters = []
+ 		for i in range(self.num_clusters):
+ 			new_cluster = Cluster(num_per_cluster[i],line_length[i],center_positions[i],cluster_angles[i],colors[i])
+ 			self.clusters.append(new_cluster)
+ 			self.Add_Env_Objects(new_cluster.objects_in_cluster)
 
-	 	incr = math.pi/float(num_groups+2.0)
-	 	mult = 1.
-	 	for i in range(0,num_groups,2):
-	 		pos_angle = center_angle+mult*incr
-	 		neg_angle = center_angle-mult*incr
-	 		print pos_angle, neg_angle, math.pi/4.0, 3.*math.pi/4.0
-	 		print math.cos(pos_angle), math.cos(neg_angle)
-	 		self.group_centers[i] = [math.cos(pos_angle),math.sin(pos_angle),origin[2]]
-	 		self.group_orthagonal[i] = [ math.sin(neg_angle), math.cos(neg_angle), 0]
-	 		self.group_centers[i+1] = [math.cos(neg_angle),math.sin(neg_angle),origin[2]]
-	 		self.group_orthagonal[i+1] = [ math.sin(pos_angle), math.cos(neg_angle), 0]
-	 		mult += 1
+ 	def Plot_Env(self):
+ 		for cluster in self.clusters:
+ 			cluster.Plot_Cluster()
 
- 		for i in range(num_groups):
- 			for j in range(2):
- 				self.group_centers[i][j] = self.group_centers[i][j]*distance+origin[j]
+	@classmethod
+	def Bi_Sym(cls, num_in_left,num_in_right, distance, line_length,origin=(0.,1.,0.5)):
+		l_direction = np.array([-1,1,0])
+		r_direction = np.array([1,1,0])
+		origin = np.array(origin)
+		l_direction = l_direction/np.linalg.norm(l_direction)
+		r_direction = r_direction/np.linalg.norm(r_direction)
+		center_positions = []
+		center_positions.append(l_direction*distance+origin)
+		center_positions.append(r_direction*distance+origin)
+		print center_positions
+		cluster_angles = [math.pi/4,-math.pi/4]
+		if num_in_left %2==0:
+			l_color = cls.EVEN_COLOR
+		else:
+			l_color = cls.ODD_COLOR
 
- 		self.group = [0]*num_groups
- 		object_ID = 0
- 		for i in range(len(objs_per_group)):
- 			self.group[i] = []
- 			x0,y0,z0 = self.group_centers[i]
- 			radius = objs_per_group[i]/float(line_length)+.05
+		if num_in_right%2==0:
+			r_color = cls.EVEN_COLOR
+		else:
+			r_color = cls.ODD_COLOR
 
- 			if objs_per_group[i]%2==1:
-				cyl = simObjects.Cylinder(ID=object_ID,x=x0,y=y0,z=z0,r1=0,r2=0,r3=1,
-						length=2.*z0, radius=radius)
- 				self.group[i].append(cyl)
- 				object_ID += 1
+		env = cls([num_in_left,num_in_right], center_positions, cluster_angles,[line_length,line_length],[l_color,r_color])
 
- 			for j in range(objs_per_group[i]):
- 				self.group[i][j] = []
-
+		return env
 
 if __name__=="__main__":
- 	env = Sym_Env([4],1.,1.,num_groups=4)
- 	print env.group_centers
- 	print env.group_orthagonal
+	import matplotlib.pyplot as plt
+ 	from pyrosim import PYROSIM
 
- 	import matplotlib.pyplot as plt
-
- 	plt.plot([0, env.group_centers[0][0], env.group_centers[0][0]+env.group_orthagonal[0][0]],
- 				[1,env.group_centers[0][1], env.group_centers[0][1]+env.group_orthagonal[0][1]])
- 	plt.plot([0, env.group_centers[1][0]],[1,env.group_centers[1][1]])
- 	plt.ylim([0,2])
- 	plt.xlim([-1,1])
- 	plt.show()
+ 	sim = PYROSIM(playPaused=False,playBlind=False,evalTime = 200)
+ 	env = Cluster_Env.Bi_Sym(3,2,4,2)
+ 	env.Send_To_Simulator(sim,0)
+ 	sim.Start()
+ 	
