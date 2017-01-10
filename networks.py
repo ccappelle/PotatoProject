@@ -1,198 +1,191 @@
-import numpy as np
 import random
-LO_INIT = -1.
-HI_INIT = 1.
+import copy
+
+
+HIDDEN = 0
+MOTOR = 1
+SENSOR = 2
+
+class Synapse(object):
+	def __init__(self,to_ID,from_ID,weight):
+		self.to_ID = to_ID
+		self.from_ID = from_ID
+		self.weight = weight
+
+	def Mutate(self,sigma=-1):
+		if sigma<=0:
+			sigma = self.weight
+			if sigma<0.05:
+				sigma = 0.05
+
+		self.weight = self.weight + random.gauss(0,sigma)
+
+	def Send_To_Simulator(self,sim,neuron_offset):
+		sim.Send_Synapse(sourceNeuronIndex=self.from_ID+neuron_offset,
+							targetNeuronIndex=self.to_ID+neuron_offset,
+							weight = self.weight)
+
+class Neuron(object):
+	def __init__(self,my_ID,my_type,assoc_ID=-1):
+		self.ID = my_ID
+		self.type = my_type
+		self.assoc_ID = assoc_ID
+
+	def Send_To_Simulator(self,sim,neuron_offset=0,assoc_offset=0):
+		if self.type == HIDDEN:
+			sim.Send_Hidden_Neuron(ID=self.ID+neuron_offset)
+		elif self.type == SENSOR:
+			sim.Send_Sensor_Neuron(ID=self.ID+neuron_offset,sensorID=self.assoc_ID+assoc_offset)
+		elif self.type == MOTOR:
+			sim.Send_Motor_Neuron(ID=self.ID+neuron_offset,jointID=self.assoc_ID+assoc_offset)
+
 
 class Network(object):
-	def __init__(self,num_sensors,num_hidden,num_motors,development_layers=1):
-		self.num_sensors = num_sensors
-		self.num_hidden = num_hidden
-		self.num_motors = num_motors
-		self.total_neurons = num_sensors+num_hidden+num_motors
-		self.development_layers = development_layers
-		self.adj_matrix = np.zeros((self.total_neurons,self.total_neurons,development_layers))
+	def __init__(self):
+		self.neurons = []
+		self.synapses = []
+		self.motor_neuron_indices = []
+		self.sensor_neuron_indices = []
+		self.hidden_neuron_incices = []
+		self.total_neurons = 0
 
-	def Send_To_Simulator(self,sim,sensor_indices=-1,motor_indices=-1,neuron_offset=0,sensor_offset=0,joint_offset=0,eval_time=500):
-		if sensor_indices < 0:
-			sensor_indices = range(self.num_sensors)
-		elif not isinstance(sensor_indices,list):
-			sensor_indices = [sensor_indices]
+	@classmethod
+	def Combine(cls,net1,net2):
+		new_net = cls()
 
-		if motor_indices < 0:
-			motor_indices = range(self.num_motors)
-		elif not isinstance(motor_indices,list):
-			motor_indices = [motor_indices]
+		for neuron in net1.neurons:
+			new_net.Add_Neuron(neuron.type,neuron.assoc_ID)
 
-		s_offset = neuron_offset
-		for s_ID in range(self.num_sensors):
-			#print 'Sending Sensor Neuron:', s_ID+s_offset, sensor_offset+sensor_indices[s_ID]
-			sim.Send_Sensor_Neuron(ID=s_ID+s_offset, sensorID=sensor_offset+sensor_indices[s_ID])
+		for neuron in net2.neurons:
+			new_net.Add_Neuron(neuron.type,neuron.assoc_ID)
 
-		h_offset = s_offset+self.num_sensors
-		for h_ID in range(self.num_hidden):
-			sim.Send_Hidden_Neuron(ID=h_ID+h_offset)
+		for synapse in net1.synapses:
+			new_net.Add_Synapse(synapse.to_ID,synapse.from_ID,synapse.weight)
 
-		m_offset = h_offset + self.num_hidden
-		for m_ID in range(self.num_motors):
-			sim.Send_Motor_Neuron(ID=m_ID+m_offset, jointID=joint_offset+motor_indices[m_ID])
+		offset = len(net1.neurons)
+		for synapse in net2.synapses:
+			new_net.Add_Synapse(synapse.to_ID+offset,synapse.from_ID+offset,synapse.weight)
 
-		for i in range(self.total_neurons):
-			for j in range(self.total_neurons):
-				if not(self.adj_matrix[i,j,0]==0):
-					sourceNeuronIndex = neuron_offset+i
-					targetNeuronIndex = neuron_offset+j
+		return new_net
+
+	def Add_Neuron(self,neuron_type,assoc_ID=0):
+		ID = len(self.neurons)
+
+		if neuron_type == MOTOR:
+			self.neurons.append(Neuron(ID,MOTOR,assoc_ID))
+			self.motor_neuron_indices.append(ID)
+		elif neuron_type == SENSOR:
+			self.neurons.append(Neuron(ID,SENSOR,assoc_ID))
+			self.sensor_neuron_indices.append(ID)
+		elif neuron_type == HIDDEN:
+			self.neurons.append(Neuron(ID,HIDDEN))
+			self.hidden_neuron_incices.append(ID)
+
+		self.total_neurons += 1
+		return ID
+
+	def Add_Synapse(self,to_neuron,from_neuron,weight=False,hi=1,lo=-1):
+
+		if not weight:
+			weight = random.uniform(hi,lo)
+
+		self.synapses.append( Synapse(to_neuron,from_neuron,weight))
+	
+
+	def Send_To_Simulator(self,sim,neuron_offset,joint_offset,sensor_offset):
+		for neuron in self.neurons:
+			if neuron.type == HIDDEN:
+				neuron.Send_To_Simulator(sim,neuron_offset)
+			elif neuron.type == MOTOR:
+				neuron.Send_To_Simulator(sim,neuron_offset,joint_offset)
+			elif neuron.type == SENSOR:
+				neuron.Send_To_Simulator(sim,neuron_offset,sensor_offset)
+
+		for synapse in self.synapses:
+			synapse.Send_To_Simulator(sim,neuron_offset)
+
+		return len(self.neurons)
+
+	def Mutate_p(self,p,sigma=-1):
+		for synapse in self.synapses:
+			if float(p) >random.random():
+				synapse.Mutate(sigma)
 
 
-					start_weight = self.adj_matrix[i,j,0]
-					end_weight = start_weight
-					start_time = -1
-					end_time = -1
+class Layered_Network(Network):
+	def __init__(self,sensor_ids,motor_ids,hidden_layers,back_connections=False,hidden_recurrence=False,motor_recurrence=False):
+		super(Layered_Network,self).__init__()
 
-					if self.development_layers==2:
-						end_weight = self.adj_matrix[i,j,1]
-						end_time = 1
-					elif self.development_layers==3:
-						end_weight = self.adj_matrix[i,j,1]
-						end_time = self.adj_matrix[i,j,2]
-					elif self.development_layers==4:
-						end_weight = self.adj_matrix[i,j,1]
-						start_time = self.adj_matrix[i,j,2]
-						end_time = self.adj_matrix[i,j,3]
+		self.num_sensors = len(sensor_ids)
+		self.num_motors = len(motor_ids)
+		self.num_hidden = sum(hidden_layers)
 
-					start_time = int((start_time + 1.)*eval_time/2.)
-					end_time = start_time + int((end_time +1.)*eval_time/2.)
-					sim.Send_Changing_Synapse(sourceNeuronIndex=sourceNeuronIndex,targetNeuronIndex=targetNeuronIndex,
-											start_weight=start_weight, end_weight=end_weight,
-											start_time=start_time,end_time=end_time)
-	def Get_Adj_Matrix(self):
-		return self.adj_matrix
+		self.num_layers = len(hidden_layers)+2
 
-	def Mutate_One_Synapse(self,fromID,toID,development_layer=0,sigma=-1):
-		if development_layer == 0 or development_layer == 1:
-			if sigma<=0:
-				sigma = self.adj_matrix[fromID,toID,development_layer]
-				if sigma<0.05:
-					sigma = 0.05
+		self.layers = [0]*self.num_layers
 
-			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				self.adj_matrix[fromID,toID,development_layer] = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
-
-		else:
-			if sigma<=0:
-				sigma = .5
-
-			if not(self.adj_matrix[fromID,toID,development_layer] == 0):
-				new_value = self.adj_matrix[fromID,toID,development_layer] + random.gauss(0,sigma)
-				if new_value>1:
-					new_value == 1
-				elif new_value<-1:
-					new_value == -1
-
-				self.adj_matrix[fromID,toID,development_layer] = new_value
-				
-	def Mutate_p(self,p=-1,sigma=-1):
-		if p<0:
-			p= 1./float(self.total_weights)
-
-		weights = np.nonzero(self.adj_matrix)
-
-		for i in range(self.total_weights):
-			if random.random()<p:
-				fromID,toID,development_layer = weights[0][i],weights[1][i],weights[2][i]
-				self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
-
-	def Mutate_n(self,n,sigma=-1):
-		weights = np.nonzero(self.adj_matrix)
-		#rands = np.random.permutation(self.total_weights)
-		vals_to_choose = range(self.total_weights)
-
-		for i in range(int(n)):
-			rand = random.randrange(len(vals_to_choose))
-			index = vals_to_choose.pop(rand)
-			fromID, toID, development_layer = weights[0][index], weights[1][index], weights[2][index]
-			self.Mutate_One_Synapse(fromID,toID,development_layer,sigma)
-
-class LayeredNetwork(Network):
-
-	def __init__(self,num_sensors=1,num_layers=1, hidden_per_layer=1, 
-				num_motors=1,back_connections=0,hidden_recurrence=0,motor_recurrence=0,
-				development_layers=1):
-		#Create an layered network with random weights returned as adjacency matrix
-		#Dimensions and structure: num_sensors -> hidden_per_layer_{1} -> ... -> hidden_per_layer_{num_layers} -> num_motors
-		#can add feed back connections between hidden neurons (back_connections=1)
-		#can add recurrent connections (hidden_reccurent=1, motor_recurrent=1)
-		super(LayeredNetwork,self).__init__(num_sensors=num_sensors,num_hidden=num_layers*hidden_per_layer,num_motors=num_motors,development_layers=development_layers)
-		self.num_layers = num_layers
-		self.hidden_per_layer = hidden_per_layer
-		self.back_connections = back_connections
-		self.hidden_recurrence = hidden_recurrence
-		self.motor_recurrence = motor_recurrence
-
-		neuronID = 0
-		
-		for from_layer in range(1+num_layers):
-			if from_layer == 0: #If layer is sensor layer
-				from_layer_size = num_sensors
-			else: 
-				from_layer_size = hidden_per_layer
-
-			if from_layer == num_layers: #If layer is last hidden before motors
-				to_layer_size = num_motors
+		for i in range(self.num_layers):
+			if i == 0:
+				num_neurons = self.num_sensors
+				neuron_type = SENSOR
+			elif i == self.num_layers-1:
+				num_neurons = self.num_motors
+				neuron_type = MOTOR
 			else:
-				to_layer_size = hidden_per_layer
+				num_neurons = hidden_layers[i-1]
+				neuron_type = HIDDEN
 
-			from_neuron_start = neuronID
-			to_neuron_start = neuronID + from_layer_size
+			self.layers[i] = []
+			for j in range(num_neurons):
+				if neuron_type ==SENSOR:
+					self.Add_Neuron(i,SENSOR,sensor_ids[j])
+				elif neuron_type == MOTOR:
+					self.Add_Neuron(i,MOTOR,motor_ids[j])
+				else:
+					self.Add_Neuron(i,HIDDEN)
 
-			#Loop through each neuron pairing in the network and connect with weight equal to that location
-			#in random matrix
-			for from_neuronID in range(from_neuron_start,from_neuron_start+from_layer_size):
-				for to_neuronID in range(to_neuron_start,to_neuron_start+to_layer_size):
-					for d_index in range(self.development_layers):
-						self.adj_matrix[from_neuronID,to_neuronID,d_index] = random.uniform(LO_INIT,HI_INIT)
-						if back_connections == 1 and from_layer>0: #If back connections are on, connect back except to sensors
-							self.adj_matrix[to_neuronID,from_neuronID,d_index] = random.uniform(LO_INIT,HI_INIT)
-				neuronID+=1	
+		for i in range(self.num_layers-1):
+			up_layer = self.layers[i]
+			down_layer = self.layers[i+1]
 
-		if hidden_recurrence == 1: #If recurrent in hidden neurons add recurrent connections
-			for neuron_ID in range(self.num_sensors,self.num_sensors+self.num_layers*self.hidden_per_layer):
-				self.adj_matrix[neuron_ID,neuron_ID,d_index] = random.uniform(LO_INIT,HI_INIT)
+			for up_neuron_ID in up_layer:
+				for down_neuron_ID in down_layer:
+					self.Add_Synapse(down_neuron_ID,up_neuron_ID)
+					if not(i == 0): 
+						if back_connections:
+							self.Add_Synapse(up_neuron_ID,down_neuron_ID)
 
-		if motor_recurrence == 1: #If recurrent in motor neurons add recurrent connections
-			for neuron_ID in range(self.num_sensors+self.num_layers*self.hidden_per_layer, self.total_neurons):
-				self.adj_matrix[neuron_ID,neuron_ID,d_index] = random.uniform(LO_INIT,HI_INIT)
-
-		self.total_weights = np.count_nonzero(self.adj_matrix)
-		self.total_synapses = self.total_weights/self.development_layers
-
-
+						if hidden_recurrence:
+							self.Add_Synapse(up_neuron_ID,up_neuron_ID)
 
 
+		for motor_id in self.layers[-1]:
+			if back_connections:
+				for hidden_id in self.layers[-2]:
+					self.Add_Synapse(hidden_id,motor_id)
 
-class NM_TreeNetwork(LayeredNetwork):
-	def __init__(self, tree, num_layers=2, hidden_per_layer=2):
-		super(NM_TreeNetwork,self).__init__(num_sensors=tree.num_leaves,num_layers=num_layers,hidden_per_layer=hidden_per_layer,num_motors=1)
-		self.tree = tree
+			if motor_recurrence:
+				self.Add_Synapse(motor_id,motor_id)
 
 
+	def Add_Neuron(self,layer,neuron_type,assoc_ID=0):
+		ID = super(Layered_Network,self).Add_Neuron(neuron_type,assoc_ID)
+		self.neurons[ID].layer = layer
+		self.layers[layer].append(ID)
 
-def Create_Biped_Network(num_layers=1,hidden_per_layer=8,back_connections=0,hidden_recurrence=0,motor_recurrence=0):
-	BIPED_SENSORS = 2
-	BIPED_MOTORS = 6
-	return LayeredNetwork(num_sensors=QUAD_SENSORS,num_layers=num_layers,hidden_per_layer=hidden_per_layer,num_motors=QUAD_MOTORS,
-							back_connections=back_connections,hidden_recurrence=hidden_recurrence,
-							motor_recurrence=motor_recurrence)
+		return ID
 
 if __name__ == "__main__":
-	#from tree import Tree
-	myNet = LayeredNetwork(num_sensors=4,num_motors=8, num_layers=2,hidden_per_layer=8)
-	Plot(myNet)
-	#Create_Quad_Network()
-	#myNet.Mutate_p()
-	#t = Tree()
-	#myNet = NM_TreeNetwork(t,num_layers=1,hidden_per_layer=1)
-	#print myNet.num_sensors,myNet.num_motors
-	#print myNet.adj_matrix[:,:,0]
+	net1 = Layered_Network([0,1],[0,1,2],[1])
+	# net1 = Layered_Network([0],[0],[1])
+	# net2 = Layered_Network([1],[1],[1])
+	# new_net = Network.Combine(net1,net2)
+	# for synapse in new_net.synapses:
+	# 	print synapse.from_ID,synapse.to_ID,synapse.weight
 
-
-	
+	# prob = 1./float(len(new_net.synapses))
+	# print prob
+	# new_net.Mutate_p(prob)
+	# print '----'
+	# for synapse in new_net.synapses:
+	# 	print synapse.from_ID,synapse.to_ID,synapse.weight

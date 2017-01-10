@@ -4,7 +4,7 @@ import simObjects
 from pyrosim import PYROSIM
 import copy
 import math
-# from tree import Sym_Tree
+import tree
 
 CREATE_NETWORK = -1
 BOX = 0
@@ -152,14 +152,6 @@ class NPed(Robot):
 		self.network = network
 
 	def Add_Random_Network(self):
-		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs,hidden_per_layer=self.num_legs*2,num_motors=self.num_legs*2)
-		
-		#self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=1,num_motors=self.num_legs*2, 
-		#										development_layers=self.development_layers, back_connections=1,motor_recurrence=0,hidden_recurrence=1)
-
-		#self.network=networks.LayeredNetwork(num_sensors=self.num_legs,num_motors=self.num_legs*2,num_layers=2,hidden_per_layer=self.num_legs*2,
-		#										development_layers=self.development_layers)
-	
 		self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=2,num_motors=self.num_legs*2, 
 												development_layers=self.development_layers, back_connections=0,motor_recurrence=0,hidden_recurrence=0)
 
@@ -212,7 +204,7 @@ class Treebot(Robot):
 		self.radius = branch_length/10.
 		self.color = color
 		self.r,self.g,self.b = color
-		self.tree = Tree(num_children=num_children,current_depth=0,max_depth=max_depth,
+		self.tree = tree.Sym_Tree(num_children=num_children,current_depth=0,max_depth=max_depth,
 			branch_length=branch_length,
 			base_position=[0.,0.,0.5],lo_angle=-math.pi/4,hi_angle=math.pi/4,global_angle=0,node_ID=0)
 
@@ -220,8 +212,9 @@ class Treebot(Robot):
 
 		self.Init_Parts(self.tree)
 
-		self.network = networks.NM_TreeNetwork(self.tree,num_layers=1,hidden_per_layer=1)
+		#self.network = networks.NM_TreeNetwork(self.tree,num_layers=1,hidden_per_layer=1)
 		#print len(self.joints)
+
 	def Init_Parts(self,tree):
 		pos = tree.Get_Center()
 		orientation = tree.Get_Orientation()
@@ -236,12 +229,13 @@ class Treebot(Robot):
 
 
 
-		if tree.depth>0:
-			lo = 0
-			hi = 0
+		if tree.depth==0:
+			lo = tree.lo_angle*3
+			hi = tree.hi_angle*3
 		else:
-			lo = tree.lo_angle
-			hi = tree.hi_angle
+			lo = 2*tree.lo_angle/float(tree.depth)
+			hi = 2*tree.hi_angle/float(tree.depth)
+
 
 		self.Add_Hinge_Joint(ID=node_ID,firstObjectID=node_ID,secondObjectID=parent_ID,
 			x=tree.base_position[0],y=tree.base_position[1],
@@ -256,7 +250,7 @@ class Treebot(Robot):
 		else:
 			for child in tree.children:
 				self.Init_Parts(child)
-	def Send_To_Simulator(self,sim, eval_time=500, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
+	def Send_To_Simulator(self,sim, eval_time, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		IDs = super(Treebot,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
 												objID=objID,jointID=jointID,sensorID=sensorID)
 		last_objID = IDs[0]
@@ -265,10 +259,32 @@ class Treebot(Robot):
 		last_neuronID = neuronID
 		##### SEND NETWORK ###############################
 		if send_network:
-			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,sensor_offset=sensorID,joint_offset=jointID,eval_time=eval_time)
+
+			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,joint_offset=jointID,sensor_offset=sensorID)
 			last_neuronID += self.network.total_neurons
 
 		return last_objID,last_jointID,last_sensorID,last_neuronID
+	@classmethod
+	def Non_Modular(cls):
+		t = cls()
+		for joint in t.joints:
+			if joint.ID > 0:
+				joint.lo = 0
+				joint.hi = 0
+
+		t.network = networks.Layered_Network([0,1],[0],[4,4])
+		return t
+	@classmethod
+	def Modular(cls):
+		t = cls()
+		for joint in t.joints:
+			if joint.ID == 0:
+				joint.lo = 0
+				joint.hi = 0
+		net1 = networks.Layered_Network([0],[1],[2,2])
+		net2 = networks.Layered_Network([1],[2],[2,2])
+		t.network = networks.Network.Combine(net1,net2)
+		return t
 
 def _Test_Tree():
 
@@ -289,9 +305,6 @@ def _Test_Mutate_Quad(sim):
 	newQuad.Send_To_Simulator(sim, eval_time=sim.evaluationTime,objID=IDs[0],jointID=IDs[1],sensorID=IDs[2],neuronID=IDs[3])
 	sim.Start()
 	sim.Wait_To_Finish()
-
-
-
 
 def _Test_Robot_Army(sim):
 	import numpy as np
@@ -332,15 +345,49 @@ def _Test_Draw():
 	data = sim3.Get_Results()
 	print data[4,1,T-1], data[9,1,T-1]
 
+def Collect_Color(data,time_steps):
+	import numpy as np
+	distance = np.zeros((2,time_steps))
+	color = np.zeros((2,time_steps,3))
+
+	for entry in data:
+		sensor = entry[0]
+		sensor_offset = entry[1]
+		time = entry[2]
+
+		if sensor_offset == 0:
+			distance[sensor,time] = data[entry]
+		else:
+			color[sensor,time,sensor_offset-1] = data[entry]
+
+	print '---------'
+	for i in range(2):
+		print i,color[i,0,:]
+	return distance, color
+
 if __name__ == "__main__":
 	#_Test_Draw()
 	import numpy as np
+	import environments
+	t = Treebot.Modular()
+	#t = Treebot.Non_Modular()
+	#t = Treebot()
 
-	T = 200
-	sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
-	mybot = Quadruped(color=[1.0,0.,0.])
-	mybot.Send_To_Simulator(sim,T)
+	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=200)
+	offset = t.Send_To_Simulator(sim, eval_time=200)
+	env = environments.Cluster_Env.Bi_Sym(3,2,4,2)
+	env.Send_To_Simulator(sim,offset[0])
 	sim.Start()
+	sim.Wait_To_Finish()
+	results = sim.Get_Results()
+	Collect_Color(results,200)
+	
+
+	# T = 200
+	# sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
+	# mybot = Quadruped(color=[1.0,0.,0.])
+	# mybot.Send_To_Simulator(sim,T)
+	# sim.Start()
 	# objID = 0
 	# jointID = 0
 	# sensorID = 0
