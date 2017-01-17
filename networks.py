@@ -110,7 +110,8 @@ class Network(object):
 		for synapse in self.synapses:
 			if float(p) >random.random():
 				synapse.Mutate(sigma)
-
+	def Mutate_n(self,n,sigma=-1):
+		pass
 
 class Layered_Network(Network):
 	def __init__(self,sensor_ids,motor_ids,hidden_layers,back_connections=False,hidden_recurrence=False,motor_recurrence=False):

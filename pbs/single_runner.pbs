@@ -9,4 +9,4 @@
 
 PATH=$HOME/anaconda/bin:$PATH
 cd $HOME/PotatoProject
-PYTHONPATH=$HOME/pkg/PotatoProject/ $HOME/anaconda/bin/python experiment_driver.py $ARG_TRIAL $ARG_DEVO $ARG_GENS 50
+PYTHONPATH=$HOME/pkg/PotatoProject/ $HOME/anaconda/bin/python single_run.py $ARG_TRIAL $ARG_DEVO $ARG_GENS 50

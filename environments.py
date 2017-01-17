@@ -47,11 +47,14 @@ class Cluster(object):
 												r1=0,r2=0,r3=1,length=1.0,radius=self.diameter/2.0+.05,
 												r=self.color[0],g=self.color[1],b=self.color[2])
 			self.objects_in_cluster.append(cyl)
-			print self.cluster_centers[i,:]
+
 	
 	def Plot_Cluster(self):
 		plt.plot([self.line_start[0],self.line_end[0]],[self.line_start[1],self.line_end[1]])
 		plt.plot(self.cluster_centers[:,0],self.cluster_centers[:,1],'ro')
+
+	def Get_Num_In_Cluster(self):
+		return self.num_in
 
 class Cluster_Env(Environment):
  	"""docstring for Tree_E"""
@@ -70,6 +73,18 @@ class Cluster_Env(Environment):
  	def Plot_Env(self):
  		for cluster in self.clusters:
  			cluster.Plot_Cluster()
+ 	def Get_Odd_And_Even(self):
+ 		odd = 0
+ 		even = 0
+
+ 		for cluster in self.clusters:
+ 			num_in = cluster.Get_Num_In_Cluster()
+ 			if num_in%2==0:
+ 				even += 1
+ 			else:
+ 				odd += 1
+
+ 		return odd, even
 
 	@classmethod
 	def Bi_Sym(cls, num_in_left,num_in_right, distance, line_length,origin=(0.,1.,0.5)):
@@ -81,7 +96,6 @@ class Cluster_Env(Environment):
 		center_positions = []
 		center_positions.append(l_direction*distance+origin)
 		center_positions.append(r_direction*distance+origin)
-		print center_positions
 		cluster_angles = [math.pi/4,-math.pi/4]
 		if num_in_left %2==0:
 			l_color = cls.EVEN_COLOR
@@ -102,7 +116,8 @@ if __name__=="__main__":
  	from pyrosim import PYROSIM
 
  	sim = PYROSIM(playPaused=False,playBlind=False,evalTime = 200)
- 	env = Cluster_Env.Bi_Sym(3,2,4,2)
+ 	#env = Cluster_Env.Bi_Sym(3,2,4,2)
+ 	#env = Environment()
  	env.Send_To_Simulator(sim,0)
  	sim.Start()
  	

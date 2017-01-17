@@ -6,21 +6,23 @@ import time
 import pickle
 import datetime as dt
 import robots
+import fitness_functions as fit_func
+import environments
 
-def run_quad(trial_num,pop_size,gens,development_layers):
-	generator_fcn = robots.Quadruped
-	fitness_fcn = evolvers.Max_Y
+def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_time,development_layers=1,envs = False):
 	time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
 	data = {}
-	evolver = evolvers.AFPO(pop_size,generator_fcn,fitness_fcn,development_layers=development_layers,max_generations=gens)
+	evolver = evolvers.AFPO(max_population_size=pop_size,generator_fcn=generator_fcn,fitness_fcn=fitness_fcn,environments = envs,
+					development_layers=development_layers,max_generations=gens,eval_time=eval_time)
 	data['pop_size'] = evolver.max_population_size
 	data['gens'] = evolver.max_generations
 	data['development_layers'] = evolver.development_layers
 	data['eval_time'] = evolver.eval_time
 	data['data'] = evolver.Evolve()
 	data['motor_speed'] = robots.MOTOR_SPEED
-	data_folder = './Data/'
-	file_name = 'Quad_'+str(development_layers)+'_'+ str(trial_num) +'_'+ str(time_stamp) +'.pickle'
+	data['environments'] = envs
+	data_folder = './Data'
+	file_name = name+'_'+str(development_layers)+'_'+ str(trial_num) +'_'+ str(time_stamp) +'.pickle'
 
 	if not os.path.isdir(data_folder):
 		os.makedirs(data_folder)
@@ -29,4 +31,31 @@ def run_quad(trial_num,pop_size,gens,development_layers):
 	with open(path_to_file,'w') as f:
 		pickle.dump(data,f)
 
-run_quad(1, 50, 100, 3)
+	with open('last.txt','w') as f:
+		f.write(path_to_file+'\n')
+		
+def run_quad(trial_num,pop_size,gens):
+	generator_fcn = robots.Quadruped
+	fitness_fcn = fit_func.Max_Y
+	run_experiment(generator_fcn,fitness_fcn,'Quad',trial_num,pop_size,gens)
+
+def run_treebot(tree_type,trial_num,envs,pop_size,gens,eval_time):	
+	if tree_type == 'M' or tree_type == 'Modular':
+		generator_fcn = robots.Treebot.Modular
+	elif tree_type == 'NM' or tree_type == 'Nonmodular':
+		generator_fcn = robots.Treebot.Non_Modular
+
+	fitness_fcn = fit_func.Treebot
+
+	run_experiment(generator_fcn,fitness_fcn,tree_type,trial_num,pop_size,gens,eval_time=eval_time,envs=envs)
+
+env_list = []
+distance = 4
+length = 2
+
+for left in [1,2]:
+	for right in [1,2]:
+		env_list.append(environments.Cluster_Env.Bi_Sym(left,right,distance,length))
+#env = [env_list[0],env_list[1]]
+env = env_list
+run_treebot(tree_type='NM',trial_num=0,envs=env,pop_size=100,gens=500,eval_time=100)

@@ -22,12 +22,15 @@ class Robot(object):
 		self.motor_speed = motor_speed
 		self.color = self.r,self.g,self.b = color
 
-	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,
+	def Add_Network(self,network):
+		self.network = network
+
+	def Send_To_Simulator(self,sim,x_offset=0.,y_offset=0.,z_offset=0.,eval_time=200,
 						objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
 		num_body_parts = len(self.body_parts)
 		num_joints = len(self.joints)
 		num_sensors = len(self.sensors)
-
+		last_neuronID = neuronID
 
 		for bp in self.body_parts:
 			bp.Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset,
@@ -38,8 +41,12 @@ class Robot(object):
 		for s in self.sensors:
 			s.Send_To_Simulator(sim,ID_offset=sensorID,object_ID_offset=objID)
 
+		if send_network:
+			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,joint_offset=jointID,sensor_offset=sensorID)
+			last_neuronID += self.network.total_neurons
 
-		return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors
+		return objID+num_body_parts,jointID+num_joints,sensorID+num_sensors,last_neuronID
+
 
 	def Add_Cylinder(self, **kwargs):
 		cylinder = simObjects.Cylinder(**kwargs)
@@ -70,6 +77,18 @@ class Robot(object):
 		self.Send_To_Simulator(sim)
 		sim.Start()
 
+	def Copy_And_Mutate(self,variable=-1,sigma=-1):
+		mutant = copy.deepcopy(self)
+		mutant.Mutate_Network(variable=variable,sigma=sigma)
+		return mutant
+
+	def Mutate_Network(self,variable=-1,sigma=-1):
+		if variable<1 and variable>0:
+			self.network.Mutate_p(p=variable,sigma=sigma)
+		elif variable>=1:
+			self.network.Mutate_n(n=variable,sigma=sigma)
+		else:
+			self.network.Mutate_p(p=1./float(len(self.network.synapses)),sigma=sigma)
 class NPed(Robot):
 	def __init__(self,x=0,y=0,z=0.3,num_legs=4,body_length=0.5,body_height=0.1,color=[0,0,0],network=False,z_incr=0.05,development_layers=1): 
 		super(NPed,self).__init__(color = color)
@@ -148,8 +167,6 @@ class NPed(Robot):
 		self.sensor_ID = sensor_ID
 		self.joint_ID = joint_ID
 
-	def Add_Network(self,network):
-		self.network = network
 
 	def Add_Random_Network(self):
 		self.network = networks.LayeredNetwork(num_sensors=self.num_legs, hidden_per_layer=self.num_legs*2,num_layers=2,num_motors=self.num_legs*2, 
@@ -169,20 +186,6 @@ class NPed(Robot):
 
 		return last_objID,last_jointID,last_sensorID,last_neuronID
 
-	def Mutate_Network(self,variable=-1,sigma=-1):
-		if variable<1 and variable>0:
-			self.network.Mutate_p(p=variable,sigma=sigma)
-		elif variable>=1:
-			self.network.Mutate_n(n=variable,sigma=sigma)
-		else:
-			self.network.Mutate_p(sigma=sigma)
-
-
-	def Copy_And_Mutate(self,variable=-1,sigma=-1):
-		mutant = copy.deepcopy(self)
-		mutant.Mutate_Network(variable=variable,sigma=sigma)
-		return mutant
-
 	def Get_Adj_Matrix(self):
 		return self.network.Get_Adj_Matrix()
 
@@ -197,7 +200,7 @@ class Quadruped(NPed):
 		super(Quadruped,self).__init__(num_legs=4,*args,**kwargs)
 
 class Treebot(Robot):
-	def __init__(self, num_children=2,max_depth=1, branch_length=1,color=(1,0,0)):
+	def __init__(self, num_children=2,max_depth=1, branch_length=1,color=(1,0,0),development_layers=1):
 		super(Treebot,self).__init__()
 
 		self.branch_length = branch_length
@@ -250,40 +253,37 @@ class Treebot(Robot):
 		else:
 			for child in tree.children:
 				self.Init_Parts(child)
-	def Send_To_Simulator(self,sim, eval_time, x_offset=0,y_offset=0,z_offset=0,objID=0,jointID=0,sensorID=0,neuronID=0,send_network=True):
-		IDs = super(Treebot,self).Send_To_Simulator(sim,x_offset=x_offset,y_offset=y_offset, z_offset=z_offset,
-												objID=objID,jointID=jointID,sensorID=sensorID)
-		last_objID = IDs[0]
-		last_jointID = IDs[1]
-		last_sensorID = IDs[2]
-		last_neuronID = neuronID
-		##### SEND NETWORK ###############################
-		if send_network:
 
-			self.network.Send_To_Simulator(sim,neuron_offset=neuronID,joint_offset=jointID,sensor_offset=sensorID)
-			last_neuronID += self.network.total_neurons
-
-		return last_objID,last_jointID,last_sensorID,last_neuronID
 	@classmethod
-	def Non_Modular(cls):
+	def Non_Modular(cls, network=False):
 		t = cls()
 		for joint in t.joints:
 			if joint.ID > 0:
 				joint.lo = 0
 				joint.hi = 0
-
-		t.network = networks.Layered_Network([0,1],[0],[4,4])
+		#make network from sensors:0,1 to motor:0 with 2 hidden layers each with 4 neurons
+		#Back connections are on
+		#Motor recurrence is on
+		#M
+		if network:
+			t.network = network
+		else:
+			t.network = networks.Layered_Network([0,1],[0],[8,8],hidden_recurrence=True,motor_recurrence=True,back_connections=True)
 		return t
 	@classmethod
-	def Modular(cls):
+	def Modular(cls, network = False):
 		t = cls()
 		for joint in t.joints:
 			if joint.ID == 0:
 				joint.lo = 0
 				joint.hi = 0
-		net1 = networks.Layered_Network([0],[1],[2,2])
-		net2 = networks.Layered_Network([1],[2],[2,2])
-		t.network = networks.Network.Combine(net1,net2)
+
+		if network:
+			t.network = network
+		else:
+			net1 = networks.Layered_Network([0],[1],[2,2],motor_recurrence=True)
+			net2 = networks.Layered_Network([1],[2],[2,2],motor_recurrence=True)
+			t.network = networks.Network.Combine(net1,net2)
 		return t
 
 def _Test_Tree():
@@ -345,43 +345,27 @@ def _Test_Draw():
 	data = sim3.Get_Results()
 	print data[4,1,T-1], data[9,1,T-1]
 
-def Collect_Color(data,time_steps):
-	import numpy as np
-	distance = np.zeros((2,time_steps))
-	color = np.zeros((2,time_steps,3))
 
-	for entry in data:
-		sensor = entry[0]
-		sensor_offset = entry[1]
-		time = entry[2]
-
-		if sensor_offset == 0:
-			distance[sensor,time] = data[entry]
-		else:
-			color[sensor,time,sensor_offset-1] = data[entry]
-
-	print '---------'
-	for i in range(2):
-		print i,color[i,0,:]
-	return distance, color
 
 if __name__ == "__main__":
 	#_Test_Draw()
 	import numpy as np
 	import environments
+	import fitness_functions as ff
 	t = Treebot.Modular()
 	#t = Treebot.Non_Modular()
 	#t = Treebot()
 
-	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=200)
-	offset = t.Send_To_Simulator(sim, eval_time=200)
+	sim = PYROSIM(playPaused=True,playBlind=False,evalTime=100)
+	offset = t.Send_To_Simulator(sim, eval_time=100)
 	env = environments.Cluster_Env.Bi_Sym(3,2,4,2)
 	env.Send_To_Simulator(sim,offset[0])
 	sim.Start()
 	sim.Wait_To_Finish()
 	results = sim.Get_Results()
-	Collect_Color(results,200)
-	
+	#nfitne = Collect_Color(results, env)
+	#print fitness
+	print ff.Treebot(results,env)
 
 	# T = 200
 	# sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)

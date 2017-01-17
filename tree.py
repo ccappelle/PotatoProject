@@ -1,6 +1,5 @@
 import math
 import copy
-import matplotlib.pyplot as plt
 import numpy as np
 
 XY_PLANE = 0
@@ -210,12 +209,6 @@ class Sym_Tree(Base_Tree):
 					self.leaf_list.append(leaf_ID)
 				self.children.append(child)	
 
-	def Plot_Tree(self,ax):
-		plt.plot([self.tip_position[1],self.base_position[1]],[self.tip_position[0],self.base_position[0]])
-		center = self.Get_Center()
-		ax.text(center[1],center[0],str(self.node_ID))
-		for c in self.children:
-			c.Plot_Tree(ax)
 
 	def Scale_Node(self,target_node_ID, scale_factor):
 		found = False
@@ -254,37 +247,6 @@ class Sym_Tree(Base_Tree):
 			orientation[i] = self.tip_position[i]-self.base_position[i]
 		return orientation
 
-def _Test_Tree_Plot():
-	num_children = 2
-	max_depth = 4
-	branch_length = .75
-
-	t = Sym_Tree(num_children=num_children,current_depth=0,max_depth=max_depth, 
-		branch_length=branch_length,
-		base_position=[0,0,0.5],lo_angle=-math.pi/4.,hi_angle=math.pi/4.,global_angle=math.pi/2.0,node_ID=0)
-
-	print t.num_leaves,t.num_nodes,t.leaf_list
-
-
-	_Plot(t)
-	#t.Rotate_Node(1,math.pi/4.0)
-	#t.Scale(3.0)
-	#t.Scale_Node(1,2.0)
-	#t.Rotate_Node(1,-.3)
-	#_Plot(t)
-	t.Scale_Whole_Tree(.5)
-	_Plot(t)
-
-	plt.show()
-
-
-def _Plot(t):
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	t.Plot_Tree(ax)
-
-if __name__ == "__main__":
-	_Test_Tree_Plot()
 
 
 
