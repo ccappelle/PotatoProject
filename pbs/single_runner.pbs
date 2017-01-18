@@ -2,9 +2,8 @@
 #PBS -N Potato_Project
 #PBS -m a
 #PBS -M collin.cappelle@gmail.com
-#PBS -o pbs_${ARG_DEVO}_${ARG_TRIAL}.log
 #PBS -l nodes=1:ppn=12,pmem=1gb,pvmem=1gb
-#PBS -l walltime=01:00:00
+#PBS -l walltime=03:00:00
 #PBS -q shortq
 
 PATH=$HOME/anaconda/bin:$PATH

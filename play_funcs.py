@@ -41,4 +41,5 @@ def Play_Indv(robot,eval_time,environment=False):
 	sim.Start()
 	sim.Wait_To_Finish()
 
-Play_Last()
+if __name__=="__main__":
+	Play_Last()
