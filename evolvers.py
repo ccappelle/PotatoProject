@@ -5,6 +5,7 @@ import numpy as np
 import copy
 import pickle
 import datetime as dt
+import time
 
 EVAL_TIME = 1000
 MAX_GENERATIONS = 300
@@ -162,7 +163,7 @@ class Evolver(object):
 class AFPO(Evolver):
 	def __init__(self,*args,**kwargs):
 		super(AFPO,self).__init__(*args,**kwargs)
-
+		self.start_time = dt.datetime.now().strftime('%H:%M:%S')
 
 	def Add_Random_Individual(self):
 		super(AFPO,self).Add_Random_Individual()
@@ -249,8 +250,8 @@ class AFPO(Evolver):
 			best[i]['fitness'] = fitness
 			if i%100 == 0 or i == self.max_generations-1:
 				best[i]['pareto_front'] = pareto_front
-			if i%50 == 0 and i>0:
-				self.Quick_Save()
+			#if i%50 == 0 and i>0:
+			#	self.Quick_Save()
 		return best
 
 	def Evolve_For_One_Generation(self):
@@ -277,6 +278,7 @@ class AFPO(Evolver):
 		print '	Best Fitness', fit_list[0]
 		print '	Environment fit', self.population[0]['env_fitness']
 		print '	Age', self.population[0]['age']
+		print ' Time', self.start_time, dt.datetime.now().strftime('%H:%M:%S')
 		print '\n'
 
 		self.Age_Population()
