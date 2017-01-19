@@ -16,15 +16,14 @@ def Env_Mean(fitness_vec):
 def Env_Weighted_Average(fitness_vec):
 	weigted_avg = 0
 	sorted_vec = sorted(fitness_vec)
-	for i in range(len(sorted_vec)):
-		if len(sorted_vec)==1:
-			weight = 1.
-		elif i<len(sorted_vec)-1:
-			weight = 1./(2.0*(i+1))
-		else:
-			weight = 1./(2.0*i)
-		weigted_avg += sorted_vec[i]*weight
-	return weigted_avg
+	fitness = 0.
+	for i in range(len(fitness_vec)):
+		if not(i == len(fitness_vec)-1):
+			modifier = 1./(2.**(i+1.)) #exponential decay on weighting term
+		fitness += sorted_vec[i]*modifier
+
+	return fitness
+
 
 def Env_Worst(fitness_vec):
 	return min(fitness_vec)
@@ -35,7 +34,8 @@ class Evolver(object):
 					fitness_fcn={},max_generations=MAX_GENERATIONS,
 					eval_time=EVAL_TIME,maximize=True,
 					development_layers = 1,
-					env_avg_func=Env_Weighted_Average):
+					env_avg_func=Env_Weighted_Average,
+					fitness_threshold = False):
 		
 		self.population = []
 		self.max_population_size = max_population_size
@@ -48,6 +48,7 @@ class Evolver(object):
 		self.generation = 0
 		self.max_generations = max_generations
 		self.development_layers = development_layers
+		self.fitness_threshold = fitness_threshold
 
 		self.environments = []
 		if not environments:
@@ -248,6 +249,14 @@ class AFPO(Evolver):
 			fitness,pareto_front = self.Evolve_For_One_Generation()
 			best[i] = {}
 			best[i]['fitness'] = fitness
+			if self.fitness_threshold:
+				end_flag = True
+				for env_fitness in pareto_front[0]['env_fitness']:
+					if env_fitness< self.fitness_threshold:
+						end_flag = False
+				if end_flag:
+					best[i]['pareto_front'] = pareto_front	
+					return best
 			if i%100 == 0 or i == self.max_generations-1:
 				best[i]['pareto_front'] = pareto_front
 			#if i%50 == 0 and i>0:

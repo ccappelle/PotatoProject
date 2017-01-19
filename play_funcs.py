@@ -23,7 +23,10 @@ def Play_Indv_From_Data(dumped_data, generation=-1):
 
 	print eval_time
 	if generation==-1:
-		generation = gens-1
+		count = 0
+		for key in dumped_data['data']:
+			count = count + 1
+		generation = count-1
 
 	fitness = gen_data[generation]['fitness']
 	pareto_front = gen_data[generation]['pareto_front']

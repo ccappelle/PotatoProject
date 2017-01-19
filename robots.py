@@ -11,7 +11,7 @@ BOX = 0
 CYLINDER = 1
 JOINT = 2
 SENSOR = 3
-MOTOR_SPEED = .5
+MOTOR_SPEED = .25
 
 class Robot(object):
 	def __init__(self, motor_speed=MOTOR_SPEED,color=[1.0,1.0,1.0]):
