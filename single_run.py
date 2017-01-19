@@ -66,7 +66,7 @@ if __name__=="__main__":
 	# #env = [env_list[0],env_list[1]]
 	env = env_list
 
-	run_treebot(tree_type='NM',trial_num=trial_num,envs=env,pop_size=100,gens=3000,eval_time=100)
+	run_treebot(tree_type='NM',trial_num=trial_num,envs=env,pop_size=100,gens=5000,eval_time=100)
 
 
 
