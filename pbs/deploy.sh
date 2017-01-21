@@ -1,4 +1,7 @@
 #!/bin/bash
+#1= number of runs
+#2= Robot type (NM, M)
+#3 = Dimensions
 DATE="$(date +%y_%j_%k%M%S)"
 ssh ckcappel@bluemoon-user1.uvm.edu "mkdir -p scratch/logs/"
 scp ~/Documents/PotatoProject/pbs/single_runner.pbs ckcappel@bluemoon-user1.uvm.edu:~/runners/
