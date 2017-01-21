@@ -22,7 +22,7 @@ def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_t
 	data['motor_speed'] = robots.MOTOR_SPEED
 	data['environments'] = envs
 	data_folder = './Data'
-	file_name = name+'_'+ str(trial_num) +'_'+str(len(ens))+'_'+ str(time_stamp) +'.pickle'
+	file_name = name+'_'+ str(trial_num) +'_'+str(len(envs))+'_'+ str(time_stamp) +'.pickle'
 
 	if not os.path.isdir(data_folder):
 		os.makedirs(data_folder)
