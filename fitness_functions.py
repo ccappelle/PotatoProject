@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import numpy as np
 import environments
 def Treebot(data, environment):

@@ -8,42 +8,104 @@ import datetime as dt
 import robots
 import fitness_functions as fit_func
 import environments
+import json
+from pyrosim import PYROSIM
 
-def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_time,development_layers=1,envs = False, fitness_threshold=False):
+def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_time,
+					env_order, dimensions,env_space = False, fitness_threshold=False,development_layers=1,
+					):
 	time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	data = {}
-	evolver = evolvers.AFPO(max_population_size=pop_size,generator_fcn=generator_fcn,fitness_fcn=fitness_fcn,environments = envs,
-					development_layers=development_layers,max_generations=gens,eval_time=eval_time, fitness_threshold=fitness_threshold)
+
+	envs_to_train_in = [env_space[i] for i in env_order]
+
+	evolver = evolvers.AFPO(max_population_size=pop_size,generator_fcn=generator_fcn,fitness_fcn=fitness_fcn,
+					environments = envs_to_train_in,
+					development_layers=development_layers,
+					max_generations=gens,eval_time=eval_time,
+					fitness_threshold=fitness_threshold)
+
+
 	data['pop_size'] = evolver.max_population_size
-	data['gens'] = evolver.max_generations
+	#data['fitness_function'] = fitness_function
 	data['development_layers'] = evolver.development_layers
 	data['eval_time'] = evolver.eval_time
-	data['data'] = evolver.Evolve()
-	data['motor_speed'] = robots.MOTOR_SPEED
-	data['environments'] = envs
-	data_folder = './Data'
-	file_name = name+'_'+ str(trial_num) +'_'+str(len(envs))+'_'+ str(time_stamp) +'.pickle'
 
+
+	evolved_data = evolver.Evolve()
+	gens = evolver.generation-1
+	data['gens'] = gens
+	best_robot = evolved_data[gens]['pareto_front'][0]['genome']
+	data['data'] = evolved_data
+	data['best_robot'] = best_robot
+	data['motor_speed'] = robots.MOTOR_SPEED
+	data['environments'] = envs_to_train_in
+	data['env_space'] = env_space
+	data['name'] = name
+	data['threshold'] = fitness_threshold
+	data['dimensions'] = dimensions
+	data['num_trained_in'] = len(envs_to_train_in)
+
+
+	env_fitness = [0]*16
+	for index,env in enumerate(env_space):
+		sim = PYROSIM(playBlind=True,playPaused=False,evalTime=eval_time)
+		ids = best_robot.Send_To_Simulator(sim,eval_time=eval_time)
+		env.Send_To_Simulator(sim, ID_offset=ids[0])
+
+		sim.Start()
+		sim.Wait_To_Finish()
+		sensor_data = sim.Get_Results()
+		 
+		env_fitness[index] = fitness_fcn(sensor_data,env)
+
+
+	data_folder = './Data'
+	file_name = name+'_'+ str(trial_num) +'_'+str(len(env_order))+'_'+str(dimensions)+'_'+ str(time_stamp)
+	pickle_file_name = file_name +'.pickle'
+	json_file_name = file_name+'.json'
 	if not os.path.isdir(data_folder):
 		os.makedirs(data_folder)
 
-	path_to_file = data_folder +'/'+file_name
-	with open(path_to_file,'w') as f:
+	pickle_path_to_file = data_folder +'/'+pickle_file_name
+	json_path_to_file = data_folder + '/' + json_file_name
+
+	with open(pickle_path_to_file,'w') as f:
 		pickle.dump(data,f)
 
-	with open('last.txt','w') as f:
-		f.write(path_to_file+'\n')
+
+
+	#Create json daat
+	json_data = {}
+	
+	print 'env fit', env_fitness
+	print 'env order', env_order
+	#store json data
+	json_data['env_fitness'] = env_fitness
+	json_data['type'] = name
+	json_data['threshold'] = fitness_threshold
+	json_data['dimensions'] = dimensions
+	json_data['num_trained_in'] = len(envs_to_train_in)
+	json_data['env_order'] = env_order
+
+	#Write json
+	with open(json_path_to_file,'w') as f:
+		json.dump(json_data,f)
+
+
 
 def run_cont_experiment(*args,**kwargs):
-	while True:
+	count = 0
+	while count <= 75:
 		run_experiment(*args,**kwargs)
+		count += 1
 
 def run_quad(trial_num,pop_size,gens):
 	generator_fcn = robots.Quadruped
 	fitness_fcn = fit_func.Max_Y
 	run_experiment(generator_fcn,fitness_fcn,'Quad',trial_num,pop_size,gens)
 
-def run_treebot(tree_type,trial_num,envs,pop_size,gens,eval_time,fitness_threshold,constant):	
+def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,fitness_threshold,constant,dimensions):	
 	if tree_type == 'M' or tree_type == 'Modular':
 		generator_fcn = robots.Treebot.Modular
 	elif tree_type == 'NM' or tree_type == 'Nonmodular':
@@ -52,12 +114,14 @@ def run_treebot(tree_type,trial_num,envs,pop_size,gens,eval_time,fitness_thresho
 	fitness_fcn = fit_func.Treebot
 	if constant:
 		run_cont_experiment(generator_fcn,fitness_fcn,name=tree_type,trial_num=trial_num,
-						pop_size=pop_size,gens=gens,eval_time=eval_time,envs=envs,
-						fitness_threshold=fitness_threshold)
+						pop_size=pop_size,gens=gens,eval_time=eval_time,
+						env_order=env_order,env_space=env_space,
+						fitness_threshold=fitness_threshold,dimensions=dim_num)
 	else:
 		run_experiment(generator_fcn,fitness_fcn,name=tree_type,trial_num=trial_num,
-						pop_size=pop_size,gens=gens,eval_time=eval_time,envs=envs,
-						fitness_threshold=fitness_threshold)
+						pop_size=pop_size,gens=gens,eval_time=eval_time,
+						env_order=env_order,env_space=env_space,
+						fitness_threshold=fitness_threshold,dimensions=dim_num)
 
 
 
@@ -68,41 +132,35 @@ if __name__=="__main__":
 	tree_type = str(sys.argv[2])
 	dim_num = int(sys.argv[3])
 
-
-	env_dict = {} 
+	THRESHOLD = .9
 	distance_vals = [4,6]
 	length_vals = [1,2]
 	num_in = [1,2]
 	num_LR = 2
-	for i,left in enumerate(num_in):
-	 	for j,right in enumerate(num_in):
-	 		for k,distance in enumerate(distance_vals):
-	 			for l,length in enumerate(length_vals):
-	 				env = environments.Cluster_Env.Bi_Sym(left,right,distance,length)
-	 				env_dict[i,j,k,l]=env
+	env_list = [0]*16
+
+	order = [0,3]
+	if dim_num == 3:
+		order = [0,3,4,7]
+	elif dim_num == 4:
+		order = [0,3,4,7,8,11,12,15]
+
+	env_space=[]
+	env_tuple_list = []
+	for length in length_vals:
+		for distance in distance_vals:
+			for left in num_in:
+				for right in num_in:
+					env_tuple = (length,distance,left,right)
+					env_tuple_list.append(env_tuple)
+					env_object = environments.Cluster_Env.Bi_Sym(left,right,distance,length)
+					env_space.append(env_object)
 	
 
-	env_list = []
-	count = 0
-
-	for key in env_dict:
-		i = key[0]
-		j = key[1]
-		k = key[2]
-		l = key[3]
-		count += 1
-		if dim_num >= 2:
-			if i==j and k == 0 and l == 0:
-				env_list.append(env_dict[key])
-		if dim_num >= 3:
-			if i==j and k == 1 and l == 0:
-				env_list.append(env_dict[key])
-		if dim_num >= 4:
-			if i==j  and l == 1:
-				env_list.append(env_dict[key])
-
-
-	run_treebot(tree_type=tree_type,trial_num=trial_num,envs=env_list,pop_size=50,gens=5000,eval_time=100,fitness_threshold=.9,constant=True)
+	run_treebot(tree_type=tree_type,trial_num=trial_num,
+				env_order=order,env_space=env_space,
+				pop_size=50,gens=100000,eval_time=100,
+				fitness_threshold=THRESHOLD,constant=True, dimensions=dim_num)
 
 
 

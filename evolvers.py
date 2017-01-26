@@ -245,6 +245,7 @@ class AFPO(Evolver):
 
 	def Evolve(self):
 		best = {}
+
 		for i in range(self.max_generations):
 			fitness,pareto_front = self.Evolve_For_One_Generation()
 			best[i] = {}
@@ -261,6 +262,7 @@ class AFPO(Evolver):
 				best[i]['pareto_front'] = pareto_front
 			#if i%50 == 0 and i>0:
 			#	self.Quick_Save()
+
 		return best
 
 	def Evolve_For_One_Generation(self):

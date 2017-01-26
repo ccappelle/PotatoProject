@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import environments
 from pyrosim import PYROSIM
 import pickle
