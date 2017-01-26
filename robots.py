@@ -281,8 +281,8 @@ class Treebot(Robot):
 		if network:
 			t.network = network
 		else:
-			net1 = networks.Layered_Network([0],[1],[2,2],motor_recurrence=True)
-			net2 = networks.Layered_Network([1],[2],[2,2],motor_recurrence=True)
+			net1 = networks.Layered_Network([0],[1],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True)
+			net2 = networks.Layered_Network([1],[2],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True)
 			t.network = networks.Network.Combine(net1,net2)
 		return t
 
