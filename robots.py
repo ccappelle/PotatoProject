@@ -270,6 +270,7 @@ class Treebot(Robot):
 		else:
 			t.network = networks.Layered_Network([0,1],[0],[8,8],hidden_recurrence=True,motor_recurrence=True,back_connections=True)
 		return t
+		
 	@classmethod
 	def Modular(cls, network = False):
 		t = cls()
