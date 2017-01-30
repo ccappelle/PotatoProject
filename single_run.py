@@ -159,7 +159,7 @@ if __name__=="__main__":
 
 	run_treebot(tree_type=tree_type,trial_num=trial_num,
 				env_order=order,env_space=env_space,
-				pop_size=50,gens=100000,eval_time=100,
+				pop_size=25,gens=100000,eval_time=100,
 				fitness_threshold=THRESHOLD,constant=True, dimensions=dim_num)
 
 

@@ -44,4 +44,4 @@ def Play_Indv(robot,eval_time,environment=False):
 	sim.Wait_To_Finish()
 
 if __name__=="__main__":
-	Play_Last()
+	Play_Pickle_Best('./Data/showme/NM_1_2_2017_01-18_14_42-53.pickle')
