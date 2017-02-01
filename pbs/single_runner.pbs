@@ -3,8 +3,7 @@
 #PBS -m a
 #PBS -M collin.cappelle@gmail.com
 #PBS -l nodes=1:ppn=12,pmem=2gb,pvmem=2gb
-#PBS -l walltime=3:00:00
-#PBS -q shortq
+#PBS -l walltime=15:00:00
 
 PATH=$HOME/anaconda/bin:$PATH
 cd $HOME/PotatoProject
