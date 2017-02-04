@@ -107,10 +107,11 @@ def run_quad(trial_num,pop_size,gens):
 	run_experiment(generator_fcn,fitness_fcn,'Quad',trial_num,pop_size,gens)
 
 def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,fitness_threshold,constant,dimensions,color_on):	
+	print 'Waaaat ',color_on
 	if tree_type == 'M' or tree_type == 'Modular':
 		if color_on:
 			generator_fcn = robots.Treebot.MC
-			tree_type == tree_type + 'C'
+			tree_type = tree_type + 'C'
 		else:
 			generator_fcn = robots.Treebot.Modular
 	elif tree_type == 'NM' or tree_type == 'Nonmodular':
@@ -119,7 +120,7 @@ def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,
 			tree_type = tree_type +'C'
 		else:
 			generator_fcn = robots.Treebot.Non_Modular
-
+	print tree_type
 	fitness_fcn = fit_func.Treebot
 	if constant:
 		run_cont_experiment(generator_fcn,fitness_fcn,name=tree_type,trial_num=trial_num,
@@ -141,7 +142,7 @@ if __name__=="__main__":
 	tree_type = str(sys.argv[2])
 	dim_num = int(sys.argv[3])
 
-	THRESHOLD = .9
+	THRESHOLD = .2
 	distance_vals = [4,6]
 	length_vals = [1,2]
 	num_in = [1,2]
