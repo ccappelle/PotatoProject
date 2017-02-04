@@ -26,16 +26,16 @@ class Synapse(object):
 							weight = self.weight)
 
 class Neuron(object):
-	def __init__(self,my_ID,my_type,assoc_ID=-1):
+	def __init__(self,my_ID,my_type,assoc_ID=-1,svi=0):
 		self.ID = my_ID
 		self.type = my_type
 		self.assoc_ID = assoc_ID
-
+		self.svi = svi
 	def Send_To_Simulator(self,sim,neuron_offset=0,assoc_offset=0):
 		if self.type == HIDDEN:
 			sim.Send_Hidden_Neuron(ID=self.ID+neuron_offset)
 		elif self.type == SENSOR:
-			sim.Send_Sensor_Neuron(ID=self.ID+neuron_offset,sensorID=self.assoc_ID+assoc_offset)
+			sim.Send_Sensor_Neuron(ID=self.ID+neuron_offset,sensorID=self.assoc_ID+assoc_offset,sensorValueIndex=self.svi)
 		elif self.type == MOTOR:
 			sim.Send_Motor_Neuron(ID=self.ID+neuron_offset,jointID=self.assoc_ID+assoc_offset)
 
@@ -68,14 +68,14 @@ class Network(object):
 
 		return new_net
 
-	def Add_Neuron(self,neuron_type,assoc_ID=0):
+	def Add_Neuron(self,neuron_type,assoc_ID=0,svi=0):
 		ID = len(self.neurons)
 
 		if neuron_type == MOTOR:
 			self.neurons.append(Neuron(ID,MOTOR,assoc_ID))
 			self.motor_neuron_indices.append(ID)
 		elif neuron_type == SENSOR:
-			self.neurons.append(Neuron(ID,SENSOR,assoc_ID))
+			self.neurons.append(Neuron(ID,SENSOR,assoc_ID,svi))
 			self.sensor_neuron_indices.append(ID)
 		elif neuron_type == HIDDEN:
 			self.neurons.append(Neuron(ID,HIDDEN))
@@ -114,7 +114,7 @@ class Network(object):
 		pass
 
 class Layered_Network(Network):
-	def __init__(self,sensor_ids,motor_ids,hidden_layers,back_connections=False,hidden_recurrence=False,motor_recurrence=False):
+	def __init__(self,sensor_ids,motor_ids,hidden_layers,back_connections=False,hidden_recurrence=False,motor_recurrence=False,svi=0):
 		super(Layered_Network,self).__init__()
 
 		self.num_sensors = len(sensor_ids)
@@ -139,7 +139,7 @@ class Layered_Network(Network):
 			self.layers[i] = []
 			for j in range(num_neurons):
 				if neuron_type ==SENSOR:
-					self.Add_Neuron(i,SENSOR,sensor_ids[j])
+					self.Add_Neuron(i,SENSOR,sensor_ids[j],svi)
 				elif neuron_type == MOTOR:
 					self.Add_Neuron(i,MOTOR,motor_ids[j])
 				else:
@@ -169,8 +169,8 @@ class Layered_Network(Network):
 				self.Add_Synapse(motor_id,motor_id)
 
 
-	def Add_Neuron(self,layer,neuron_type,assoc_ID=0):
-		ID = super(Layered_Network,self).Add_Neuron(neuron_type,assoc_ID)
+	def Add_Neuron(self,layer,neuron_type,assoc_ID=0,svi=0):
+		ID = super(Layered_Network,self).Add_Neuron(neuron_type,assoc_ID,svi)
 		self.neurons[ID].layer = layer
 		self.layers[layer].append(ID)
 

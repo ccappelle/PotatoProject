@@ -255,7 +255,7 @@ class Treebot(Robot):
 				self.Init_Parts(child)
 
 	@classmethod
-	def Non_Modular(cls, network=False):
+	def Non_Modular(cls, network=False,assoc_ID=0,svi=0):
 		t = cls()
 		for joint in t.joints:
 			if joint.ID > 0:
@@ -268,11 +268,12 @@ class Treebot(Robot):
 		if network:
 			t.network = network
 		else:
-			t.network = networks.Layered_Network([0,1],[0],[8,8],hidden_recurrence=True,motor_recurrence=True,back_connections=True)
+			t.network = networks.Layered_Network([0,1],[0],[8,8],hidden_recurrence=True,motor_recurrence=True,back_connections=True,
+													svi=svi)
 		return t
 		
 	@classmethod
-	def Modular(cls, network = False):
+	def Modular(cls, network = False, assoc_ID=0,svi=0):
 		t = cls()
 		for joint in t.joints:
 			if joint.ID == 0:
@@ -282,11 +283,19 @@ class Treebot(Robot):
 		if network:
 			t.network = network
 		else:
-			net1 = networks.Layered_Network([0],[1],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True)
-			net2 = networks.Layered_Network([1],[2],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True)
+			net1 = networks.Layered_Network([0],[1],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True,
+													svi=svi)
+			net2 = networks.Layered_Network([1],[2],[4,4],motor_recurrence=True,hidden_recurrence=True,back_connections=True,
+													svi=svi)
 			t.network = networks.Network.Combine(net1,net2)
 		return t
 
+	@classmethod
+	def NMC(cls,network=False):
+		return Treebot.Non_Modular(svi=1)
+	@classmethod
+	def MC(cls,network=False):
+		return Treebot.Modular(svi=1)
 def _Test_Tree():
 
 	T = 1000
@@ -353,36 +362,19 @@ if __name__ == "__main__":
 	import numpy as np
 	import environments
 	import fitness_functions as ff
-	t = Treebot.Modular()
+	t = Treebot.MC()
 	#t = Treebot.Non_Modular()
 	#t = Treebot()
 
-	sim = PYROSIM(playPaused=True,playBlind=False,evalTime=100)
+	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=100)
 	offset = t.Send_To_Simulator(sim, eval_time=100)
-	env = environments.Cluster_Env.Bi_Sym(3,2,4,2)
+	env = environments.Cluster_Env.Bi_Sym(1,2,4,2)
 	env.Send_To_Simulator(sim,offset[0])
 	sim.Start()
 	sim.Wait_To_Finish()
 	results = sim.Get_Results()
-	#nfitne = Collect_Color(results, env)
-	#print fitness
-	print ff.Treebot(results,env)
-
-	# T = 200
-	# sim = PYROSIM(playPaused=True, playBlind=False, evalTime=T)
-	# mybot = Quadruped(color=[1.0,0.,0.])
-	# mybot.Send_To_Simulator(sim,T)
-	# sim.Start()
-	# objID = 0
-	# jointID = 0
-	# sensorID = 0
-	# neuronID = 0
-	
-	# N = 10
-	# Start = 0
-	# incr = 1.5
-	# index = 0
-	# #Robot_Army(sim)
-	#_Test_Mutate_Quad(sim)
-	# _Test_Tree()
+	for key in results:
+		if key[1] == 1:
+			print 'Sensor ID:', key[0], 'svi', key[1], 'time',key[2]
+			print '		value', results[key] 
 

@@ -105,11 +105,17 @@ def run_quad(trial_num,pop_size,gens):
 	fitness_fcn = fit_func.Max_Y
 	run_experiment(generator_fcn,fitness_fcn,'Quad',trial_num,pop_size,gens)
 
-def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,fitness_threshold,constant,dimensions):	
+def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,fitness_threshold,constant,dimensions,color_on):	
 	if tree_type == 'M' or tree_type == 'Modular':
-		generator_fcn = robots.Treebot.Modular
+		if color_on:
+			generator_fcn = robots.Treebot.MC
+		else:
+			generator_fcn = robots.Treebot.Modular
 	elif tree_type == 'NM' or tree_type == 'Nonmodular':
-		generator_fcn = robots.Treebot.Non_Modular
+		if color_on:
+			generator_fcn = robots.Treebot.NMC
+		else:
+			generator_fcn = robots.Treebot.Non_Modular
 
 	fitness_fcn = fit_func.Treebot
 	if constant:
@@ -158,12 +164,15 @@ if __name__=="__main__":
 					env_space.append(env_object)
 	
 
+	#run_treebot(tree_type=tree_type,trial_num=trial_num,
+	#			env_order=order,env_space=env_space,
+	#			pop_size=50,gens=100000,eval_time=100,
+	#			fitness_threshold=THRESHOLD,constant=True, dimensions=dim_num,color_on=False)
+
 	run_treebot(tree_type=tree_type,trial_num=trial_num,
 				env_order=order,env_space=env_space,
 				pop_size=50,gens=100000,eval_time=100,
-				fitness_threshold=THRESHOLD,constant=True, dimensions=dim_num)
-
-
+				fitness_threshold=THRESHOLD,constant=True, dimensions=dim_num,color_on=True)
 
 
 
