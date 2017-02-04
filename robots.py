@@ -296,6 +296,7 @@ class Treebot(Robot):
 	@classmethod
 	def MC(cls,network=False):
 		return Treebot.Modular(svi=1)
+		
 def _Test_Tree():
 
 	T = 1000
@@ -368,13 +369,10 @@ if __name__ == "__main__":
 
 	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=100)
 	offset = t.Send_To_Simulator(sim, eval_time=100)
-	env = environments.Cluster_Env.Bi_Sym(1,2,4,2)
+	env = environments.Cluster_Env.Bi_Sym(2,2,4,2)
 	env.Send_To_Simulator(sim,offset[0])
 	sim.Start()
 	sim.Wait_To_Finish()
 	results = sim.Get_Results()
-	for key in results:
-		if key[1] == 1:
-			print 'Sensor ID:', key[0], 'svi', key[1], 'time',key[2]
-			print '		value', results[key] 
+	print ff.Treebot(results,env)
 

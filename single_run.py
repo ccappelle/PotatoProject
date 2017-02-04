@@ -62,6 +62,7 @@ def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_t
 
 	data_folder = './Data'
 	file_name = name+'_'+ str(trial_num) +'_'+str(len(env_order))+'_'+str(dimensions)+'_'+ str(time_stamp)
+	print file_name
 	pickle_file_name = file_name +'.pickle'
 	json_file_name = file_name+'.json'
 	if not os.path.isdir(data_folder):

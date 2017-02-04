@@ -58,8 +58,8 @@ class Cluster(object):
 
 class Cluster_Env(Environment):
  	"""docstring for Tree_E"""
- 	ODD_COLOR = [1,0,0]
- 	EVEN_COLOR = [.5,0,.5]
+ 	ODD_COLOR = [.5,0,.5]
+ 	EVEN_COLOR = [1.,0,0]
 
  	def __init__(self, num_per_cluster, center_positions, cluster_angles,line_length,colors):
  		super(Cluster_Env,self).__init__()
