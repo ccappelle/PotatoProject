@@ -6,3 +6,6 @@ ode-0.12/*
 pbs/*
 Data/*
 last.txt
+Clean/*
+Dirty/*
+*.json
