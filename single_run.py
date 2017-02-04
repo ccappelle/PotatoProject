@@ -97,7 +97,7 @@ def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_t
 
 def run_cont_experiment(*args,**kwargs):
 	count = 0
-	while count <= 75:
+	while count <= 0:
 		run_experiment(*args,**kwargs)
 		count += 1
 
@@ -142,7 +142,7 @@ if __name__=="__main__":
 	tree_type = str(sys.argv[2])
 	dim_num = int(sys.argv[3])
 
-	THRESHOLD = .2
+	THRESHOLD = .9
 	distance_vals = [4,6]
 	length_vals = [1,2]
 	num_in = [1,2]
