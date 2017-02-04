@@ -141,7 +141,8 @@ if __name__=="__main__":
 
 	order = [0,3]
 	if dim_num == 3:
-		order = [0,3,4,7]
+		#order = [0,3,4,7]
+		order =[0,7]
 	elif dim_num == 4:
 		order = [0,3,4,7,8,11,12,15]
 
