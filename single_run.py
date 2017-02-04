@@ -97,7 +97,7 @@ def run_experiment(generator_fcn,fitness_fcn,name,trial_num,pop_size,gens,eval_t
 
 def run_cont_experiment(*args,**kwargs):
 	count = 0
-	while count <= 0:
+	while count <= 30:
 		run_experiment(*args,**kwargs)
 		count += 1
 
