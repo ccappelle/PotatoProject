@@ -12,7 +12,8 @@ def Play_Pickle_Best(file_path,generation=-1):
 	with open(file_path) as f:
 		data = pickle.load(f)
 
-	Play_Indv_From_Data(data,generation)
+	robot = data['best_robot']
+	Play_Indv(robot,data['eval_time'], data['env_space'])
 
 def Play_Indv_From_Data(dumped_data, generation=-1):
 	gens = dumped_data['gens']
@@ -36,12 +37,14 @@ def Play_Indv_From_Data(dumped_data, generation=-1):
 		Play_Indv(best,eval_time,environment)
 
 def Play_Indv(robot,eval_time,environment=False):
-	sim = PYROSIM(playPaused=False,playBlind=False,evalTime=eval_time)
-	offset = robot.Send_To_Simulator(sim,eval_time=eval_time)
 	if environment:
-		environment.Send_To_Simulator(sim, ID_offset=offset[0])
-	sim.Start()
-	sim.Wait_To_Finish()
+		for env in environment:
+			sim = PYROSIM(playPaused=False,playBlind=False,evalTime=eval_time)
+			offset = robot.Send_To_Simulator(sim,eval_time=eval_time)
+
+			env.Send_To_Simulator(sim, ID_offset=offset[0])
+			sim.Start()
+			sim.Wait_To_Finish()
 
 if __name__=="__main__":
-	Play_Pickle_Best('./Data/showme/NM_1_2_2017_01-18_14_42-53.pickle')
+	Play_Pickle_Best('./Data/test_me.pickle')
