@@ -109,11 +109,13 @@ def run_treebot(tree_type,trial_num,env_order,env_space,pop_size,gens,eval_time,
 	if tree_type == 'M' or tree_type == 'Modular':
 		if color_on:
 			generator_fcn = robots.Treebot.MC
+			tree_type == tree_type + 'C'
 		else:
 			generator_fcn = robots.Treebot.Modular
 	elif tree_type == 'NM' or tree_type == 'Nonmodular':
 		if color_on:
 			generator_fcn = robots.Treebot.NMC
+			tree_type = tree_type +'C'
 		else:
 			generator_fcn = robots.Treebot.Non_Modular
 
