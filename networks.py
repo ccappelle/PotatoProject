@@ -35,7 +35,7 @@ class Neuron(object):
 		if self.type == HIDDEN:
 			sim.Send_Hidden_Neuron(ID=self.ID+neuron_offset)
 		elif self.type == SENSOR:
-			sim.Send_Sensor_Neuron(ID=self.ID+neuron_offset,sensorID=self.assoc_ID+assoc_offset,sensorValueIndex=self.svi)
+			sim.Send_Sensor_Neuron(ID=self.ID+neuron_offset,sensorID=self.assoc_ID+assoc_offset,sensorValueIndex=0)
 		elif self.type == MOTOR:
 			sim.Send_Motor_Neuron(ID=self.ID+neuron_offset,jointID=self.assoc_ID+assoc_offset)
 
